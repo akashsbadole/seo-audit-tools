@@ -1,5 +1,6 @@
 import { ArrowRight, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export function HeroSection() {
   return (
@@ -15,12 +16,14 @@ export function HeroSection() {
           <p className="text-xl text-indigo-200 mb-8">
             Analyze your website's SEO performance and get actionable insights to improve your search engine rankings
           </p>
+          <Link href="#seo-audit">
           <Button 
             size="lg" 
             className="rounded-full px-8 gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-none"
           >
             Start Your Audit <ArrowRight className="w-4 h-4" />
           </Button>
+          </Link>
         </div>
       </div>
     </div>

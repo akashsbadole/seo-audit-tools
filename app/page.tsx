@@ -4,6 +4,8 @@ import { SEOMetaTags } from "@/components/seo-meta-tags"
 import { MetaTagsGenerator } from "@/components/meta-tags-generator"
 import { OpenGraphGenerator } from "@/components/open-graph-generator"
 import { CampaignUrlBuilder } from "@/components/campaign-url-builder"
+import { AboutSection } from "@/components/about-section"
+import { ContactForm } from "@/components/contact-form"
 import { ScrollToTop } from "@/components/scroll-to-top"
 
 export default function Home() {
@@ -34,6 +36,9 @@ export default function Home() {
           <CampaignUrlBuilder />
         </div>
       </div>
+
+      <AboutSection />
+      <ContactForm />
       <ScrollToTop />
     </main>
   )

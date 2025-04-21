@@ -73,17 +73,20 @@ const Header = () => {
               </a>
             </li>
             <li>
-              <a href="#" className="text-indigo-200 hover:text-white transition-colors">
+              <a 
+                href="#about" 
+                className="text-indigo-200 hover:text-white transition-colors"
+                onClick={(e) => handleScroll(e, "about")}
+              >
                 About
               </a>
             </li>
             <li>
-              <a href="#" className="text-indigo-200 hover:text-white transition-colors">
-                Services
-              </a>
-            </li>
-            <li>
-              <a href="#" className="text-indigo-200 hover:text-white transition-colors">
+              <a 
+                href="#contact" 
+                className="text-indigo-200 hover:text-white transition-colors"
+                onClick={(e) => handleScroll(e, "contact")}
+              >
                 Contact
               </a>
             </li>

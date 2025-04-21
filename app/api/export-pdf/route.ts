@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     // Set initial position
     let currentY = 60 // Increased initial Y position
-    const marginLeft = 50 // Increased left margin
+    const marginLeft = 60 // Increased left margin
     const pageWidth = doc.internal.pageSize.getWidth()
     const contentWidth = pageWidth - (marginLeft * 2)
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     doc.setFont("helvetica", "normal")
     doc.setFontSize(12)
     doc.text(`URL: ${url}`, marginLeft, currentY)
-    currentY += 25 // Increased spacing
+    currentY += 35 // Increased spacing
     doc.text(`Generated on: ${new Date().toLocaleString()}`, marginLeft, currentY)
     currentY += 40 // Increased spacing
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     doc.setFont("helvetica", "bold")
     doc.setFontSize(16)
     doc.text("Overall SEO Score", marginLeft, currentY)
-    currentY += 25
+    currentY += 35
     doc.setFont("helvetica", "normal")
     doc.setFontSize(14)
     
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
           doc.setFont("helvetica", "normal")
           const titleWidth = doc.getTextWidth(`${key}: `)
           const valueHeight = addWrappedText(value.value || '', marginLeft + titleWidth, currentY, contentWidth - titleWidth)
-          currentY += Math.max(25, valueHeight) // Increased spacing
+          currentY += Math.max(35, valueHeight) // Increased spacing
 
           // Add issues if any
           if (value.issues && value.issues.length > 0) {
