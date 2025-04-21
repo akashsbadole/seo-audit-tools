@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AuditScoreCard } from "@/components/audit-score-card"
 import { AuditSummary } from "@/components/audit-summary"
+import { SocialShare } from "@/components/social-share"
 import type { SEOAuditResult, PDFExportOptions } from "@/types/seo-audit"
-import { SEOMetaTags } from "@/components/seo-meta-tags"
+// import { SEOMetaTags } from "@/components/seo-meta-tags"
 
 export function AuditResults({ url }: { url: string }) {
   const [auditResult, setAuditResult] = useState<SEOAuditResult | null>(null)
@@ -251,6 +252,43 @@ export function AuditResults({ url }: { url: string }) {
   return (
     <div className="space-y-8">
       <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">SEO Audit Results</CardTitle>
+          <CardDescription>
+            Detailed analysis of your website's SEO performance
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => window.open(url, "_blank")}
+            >
+              <Globe className="h-4 w-4" />
+              Visit Website
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExportPdf}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              {isExporting ? "Exporting..." : "Export PDF"}
+            </Button>
+            <SocialShare url={url} title="SEO Audit Results" score={overallScore} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2 mb-2">
             <Globe className="h-5 w-5 text-muted-foreground" />
@@ -263,21 +301,6 @@ export function AuditResults({ url }: { url: string }) {
         <CardContent>
           <AuditSummary overallScore={overallScore} />
         </CardContent>
-        <CardFooter>
-          <Button variant="outline" className="gap-2" onClick={handleExportPdf} disabled={isExporting}>
-            {isExporting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="h-4 w-4" />
-                Export PDF Report
-              </>
-            )}
-          </Button>
-        </CardFooter>
       </Card>
 
       {/* Search Preview Section */}
@@ -318,7 +341,7 @@ export function AuditResults({ url }: { url: string }) {
         </CardContent>
       </Card>
 
-      <SEOMetaTags />
+      {/* <SEOMetaTags /> */}
 
       <Tabs defaultValue="on-page" className="w-full">
         <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 sm:mb-5 lg:grid-cols-6 gap-1">
