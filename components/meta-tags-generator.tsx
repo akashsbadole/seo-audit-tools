@@ -1,11 +1,17 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Copy, Check } from "lucide-react"
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Copy, Check } from "lucide-react";
 
 export function MetaTagsGenerator() {
   const [metaData, setMetaData] = useState({
@@ -33,15 +39,15 @@ export function MetaTagsGenerator() {
     rating: "general",
     breadcrumbItems: JSON.stringify([
       { position: 1, name: "Home", item: "" },
-      { position: 2, name: "Category", item: "" }
+      { position: 2, name: "Category", item: "" },
     ]),
     articleHeadline: "",
     articleDescription: "",
     articleAuthor: "",
     articleDatePublished: "",
-  })
+  });
 
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const generateMetaTags = () => {
     return `<!-- Primary Meta Tags -->
@@ -79,16 +85,22 @@ ${metaData.icbm ? `<meta name="ICBM" content="${metaData.icbm}">` : ""}
 <meta name="rating" content="${metaData.rating}">
 
 <!-- Structured Data -->
-${metaData.breadcrumbItems ? `
+${
+  metaData.breadcrumbItems
+    ? `
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": ${metaData.breadcrumbItems}
 }
-</script>` : ""}
+</script>`
+    : ""
+}
 
-${metaData.articleHeadline ? `
+${
+  metaData.articleHeadline
+    ? `
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -98,14 +110,16 @@ ${metaData.articleHeadline ? `
   "author": "${metaData.articleAuthor}",
   "datePublished": "${metaData.articleDatePublished}"
 }
-</script>` : ""}`
-  }
+</script>`
+    : ""
+}`;
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(generateMetaTags())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(generateMetaTags());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Card className="mt-8">
@@ -123,7 +137,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="title"
                 value={metaData.title}
-                onChange={(e) => setMetaData({ ...metaData, title: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, title: e.target.value })
+                }
                 placeholder="Website Title"
               />
             </div>
@@ -132,7 +148,9 @@ ${metaData.articleHeadline ? `
               <Textarea
                 id="description"
                 value={metaData.description}
-                onChange={(e) => setMetaData({ ...metaData, description: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, description: e.target.value })
+                }
                 placeholder="Website Description"
               />
             </div>
@@ -141,7 +159,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="keywords"
                 value={metaData.keywords}
-                onChange={(e) => setMetaData({ ...metaData, keywords: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, keywords: e.target.value })
+                }
                 placeholder="keyword1, keyword2, keyword3"
               />
             </div>
@@ -150,7 +170,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="author"
                 value={metaData.author}
-                onChange={(e) => setMetaData({ ...metaData, author: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, author: e.target.value })
+                }
                 placeholder="Author Name"
               />
             </div>
@@ -159,7 +181,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="ogUrl"
                 value={metaData.ogUrl}
-                onChange={(e) => setMetaData({ ...metaData, ogUrl: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, ogUrl: e.target.value })
+                }
                 placeholder="https://example.com"
               />
             </div>
@@ -168,7 +192,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="ogImage"
                 value={metaData.ogImage}
-                onChange={(e) => setMetaData({ ...metaData, ogImage: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, ogImage: e.target.value })
+                }
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -177,7 +203,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="canonicalUrl"
                 value={metaData.canonicalUrl}
-                onChange={(e) => setMetaData({ ...metaData, canonicalUrl: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, canonicalUrl: e.target.value })
+                }
                 placeholder="https://example.com"
               />
             </div>
@@ -186,7 +214,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="revisitAfter"
                 value={metaData.revisitAfter}
-                onChange={(e) => setMetaData({ ...metaData, revisitAfter: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, revisitAfter: e.target.value })
+                }
                 placeholder="1 days"
               />
             </div>
@@ -195,7 +225,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="geoRegion"
                 value={metaData.geoRegion}
-                onChange={(e) => setMetaData({ ...metaData, geoRegion: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, geoRegion: e.target.value })
+                }
                 placeholder="US"
               />
             </div>
@@ -204,7 +236,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="geoPlacename"
                 value={metaData.geoPlacename}
-                onChange={(e) => setMetaData({ ...metaData, geoPlacename: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, geoPlacename: e.target.value })
+                }
                 placeholder="New York"
               />
             </div>
@@ -213,7 +247,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="geoPosition"
                 value={metaData.geoPosition}
-                onChange={(e) => setMetaData({ ...metaData, geoPosition: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, geoPosition: e.target.value })
+                }
                 placeholder="40.7128;-74.0060"
               />
             </div>
@@ -222,7 +258,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="icbm"
                 value={metaData.icbm}
-                onChange={(e) => setMetaData({ ...metaData, icbm: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, icbm: e.target.value })
+                }
                 placeholder="40.7128, -74.0060"
               />
             </div>
@@ -231,7 +269,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="distribution"
                 value={metaData.distribution}
-                onChange={(e) => setMetaData({ ...metaData, distribution: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, distribution: e.target.value })
+                }
                 placeholder="global"
               />
             </div>
@@ -240,7 +280,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="rating"
                 value={metaData.rating}
-                onChange={(e) => setMetaData({ ...metaData, rating: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, rating: e.target.value })
+                }
                 placeholder="general"
               />
             </div>
@@ -249,7 +291,9 @@ ${metaData.articleHeadline ? `
               <Textarea
                 id="breadcrumbItems"
                 value={metaData.breadcrumbItems}
-                onChange={(e) => setMetaData({ ...metaData, breadcrumbItems: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, breadcrumbItems: e.target.value })
+                }
                 placeholder='[{"position": 1, "name": "Home", "item": "https://yourwebsite.com"}]'
               />
             </div>
@@ -258,7 +302,9 @@ ${metaData.articleHeadline ? `
               <Input
                 id="articleHeadline"
                 value={metaData.articleHeadline}
-                onChange={(e) => setMetaData({ ...metaData, articleHeadline: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, articleHeadline: e.target.value })
+                }
                 placeholder="Article Title"
               />
             </div>
@@ -267,7 +313,12 @@ ${metaData.articleHeadline ? `
               <Textarea
                 id="articleDescription"
                 value={metaData.articleDescription}
-                onChange={(e) => setMetaData({ ...metaData, articleDescription: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({
+                    ...metaData,
+                    articleDescription: e.target.value,
+                  })
+                }
                 placeholder="Article Description"
               />
             </div>
@@ -276,17 +327,26 @@ ${metaData.articleHeadline ? `
               <Input
                 id="articleAuthor"
                 value={metaData.articleAuthor}
-                onChange={(e) => setMetaData({ ...metaData, articleAuthor: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({ ...metaData, articleAuthor: e.target.value })
+                }
                 placeholder="Author Name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="articleDatePublished">Article Date Published</Label>
+              <Label htmlFor="articleDatePublished">
+                Article Date Published
+              </Label>
               <Input
                 id="articleDatePublished"
                 type="date"
                 value={metaData.articleDatePublished}
-                onChange={(e) => setMetaData({ ...metaData, articleDatePublished: e.target.value })}
+                onChange={(e) =>
+                  setMetaData({
+                    ...metaData,
+                    articleDatePublished: e.target.value,
+                  })
+                }
               />
             </div>
           </div>
@@ -314,7 +374,7 @@ ${metaData.articleHeadline ? `
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateMetaTags()}</code>
               </pre>
             </div>
@@ -322,5 +382,5 @@ ${metaData.articleHeadline ? `
         </div>
       </CardContent>
     </Card>
-  )
-} 
+  );
+}

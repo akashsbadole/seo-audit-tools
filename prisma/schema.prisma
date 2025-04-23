@@ -7,12 +7,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Domain {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   domainName  String   @unique
   ipAddress   String?
   pdfData     Bytes?   // For storing PDF as blob

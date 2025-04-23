@@ -1,11 +1,17 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Copy, Check } from "lucide-react"
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Copy, Check } from "lucide-react";
 
 export function OpenGraphGenerator() {
   const [ogData, setOgData] = useState({
@@ -20,9 +26,9 @@ export function OpenGraphGenerator() {
     locale: "en_US",
     alternateLocales: "",
     siteName: "",
-  })
+  });
 
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const generateOpenGraphTags = () => {
     return `<!-- Open Graph / Facebook -->
@@ -35,17 +41,25 @@ ${ogData.audio ? `<meta property="og:audio" content="${ogData.audio}">` : ""}
 ${ogData.video ? `<meta property="og:video" content="${ogData.video}">` : ""}
 ${ogData.determiner ? `<meta property="og:determiner" content="${ogData.determiner}">` : ""}
 <meta property="og:locale" content="${ogData.locale}">
-${ogData.alternateLocales ? ogData.alternateLocales.split(",").map(locale => 
-  `<meta property="og:locale:alternate" content="${locale.trim()}">`
-).join("\n") : ""}
-${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">` : ""}`
-  }
+${
+  ogData.alternateLocales
+    ? ogData.alternateLocales
+        .split(",")
+        .map(
+          (locale) =>
+            `<meta property="og:locale:alternate" content="${locale.trim()}">`
+        )
+        .join("\n")
+    : ""
+}
+${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">` : ""}`;
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(generateOpenGraphTags())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(generateOpenGraphTags());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Card className="mt-8">
@@ -63,7 +77,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="title"
                 value={ogData.title}
-                onChange={(e) => setOgData({ ...ogData, title: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, title: e.target.value })
+                }
                 placeholder="Page Title"
               />
             </div>
@@ -72,7 +88,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Textarea
                 id="description"
                 value={ogData.description}
-                onChange={(e) => setOgData({ ...ogData, description: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, description: e.target.value })
+                }
                 placeholder="Page Description"
               />
             </div>
@@ -99,7 +117,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="image"
                 value={ogData.image}
-                onChange={(e) => setOgData({ ...ogData, image: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, image: e.target.value })
+                }
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -108,7 +128,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="audio"
                 value={ogData.audio}
-                onChange={(e) => setOgData({ ...ogData, audio: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, audio: e.target.value })
+                }
                 placeholder="https://example.com/audio.mp3"
               />
             </div>
@@ -117,7 +139,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="video"
                 value={ogData.video}
-                onChange={(e) => setOgData({ ...ogData, video: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, video: e.target.value })
+                }
                 placeholder="https://example.com/video.mp4"
               />
             </div>
@@ -126,7 +150,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="determiner"
                 value={ogData.determiner}
-                onChange={(e) => setOgData({ ...ogData, determiner: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, determiner: e.target.value })
+                }
                 placeholder="the"
               />
             </div>
@@ -135,7 +161,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="locale"
                 value={ogData.locale}
-                onChange={(e) => setOgData({ ...ogData, locale: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, locale: e.target.value })
+                }
                 placeholder="en_US"
               />
             </div>
@@ -144,7 +172,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="alternateLocales"
                 value={ogData.alternateLocales}
-                onChange={(e) => setOgData({ ...ogData, alternateLocales: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, alternateLocales: e.target.value })
+                }
                 placeholder="fr_FR, es_ES"
               />
             </div>
@@ -153,7 +183,9 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               <Input
                 id="siteName"
                 value={ogData.siteName}
-                onChange={(e) => setOgData({ ...ogData, siteName: e.target.value })}
+                onChange={(e) =>
+                  setOgData({ ...ogData, siteName: e.target.value })
+                }
                 placeholder="Website Name"
               />
             </div>
@@ -182,7 +214,7 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateOpenGraphTags()}</code>
               </pre>
             </div>
@@ -190,5 +222,5 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
         </div>
       </CardContent>
     </Card>
-  )
-} 
+  );
+}

@@ -1,10 +1,16 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Copy, Check } from "lucide-react"
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Copy, Check } from "lucide-react";
 
 export function CampaignUrlBuilder() {
   const [campaignData, setCampaignData] = useState({
@@ -14,33 +20,38 @@ export function CampaignUrlBuilder() {
     campaignName: "",
     campaignTerm: "",
     campaignContent: "",
-  })
+  });
 
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const generateCampaignUrl = () => {
-    const params = new URLSearchParams()
-    
-    // Required fields
-    if (campaignData.campaignSource) params.append("utm_source", campaignData.campaignSource)
-    if (campaignData.campaignMedium) params.append("utm_medium", campaignData.campaignMedium)
-    if (campaignData.campaignName) params.append("utm_campaign", campaignData.campaignName)
-    
-    // Optional fields
-    if (campaignData.campaignTerm) params.append("utm_term", campaignData.campaignTerm)
-    if (campaignData.campaignContent) params.append("utm_content", campaignData.campaignContent)
+    const params = new URLSearchParams();
 
-    const baseUrl = campaignData.websiteUrl || "https://example.com"
-    const separator = baseUrl.includes("?") ? "&" : "?"
-    
-    return `${baseUrl}${separator}${params.toString()}`
-  }
+    // Required fields
+    if (campaignData.campaignSource)
+      params.append("utm_source", campaignData.campaignSource);
+    if (campaignData.campaignMedium)
+      params.append("utm_medium", campaignData.campaignMedium);
+    if (campaignData.campaignName)
+      params.append("utm_campaign", campaignData.campaignName);
+
+    // Optional fields
+    if (campaignData.campaignTerm)
+      params.append("utm_term", campaignData.campaignTerm);
+    if (campaignData.campaignContent)
+      params.append("utm_content", campaignData.campaignContent);
+
+    const baseUrl = campaignData.websiteUrl || "https://example.com";
+    const separator = baseUrl.includes("?") ? "&" : "?";
+
+    return `${baseUrl}${separator}${params.toString()}`;
+  };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(generateCampaignUrl())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(generateCampaignUrl());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <Card className="mt-8">
@@ -58,7 +69,12 @@ export function CampaignUrlBuilder() {
               <Input
                 id="websiteUrl"
                 value={campaignData.websiteUrl}
-                onChange={(e) => setCampaignData({ ...campaignData, websiteUrl: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    websiteUrl: e.target.value,
+                  })
+                }
                 placeholder="https://example.com"
                 required
               />
@@ -68,7 +84,12 @@ export function CampaignUrlBuilder() {
               <Input
                 id="campaignSource"
                 value={campaignData.campaignSource}
-                onChange={(e) => setCampaignData({ ...campaignData, campaignSource: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    campaignSource: e.target.value,
+                  })
+                }
                 placeholder="Google, Facebook, Email"
                 required
               />
@@ -78,7 +99,12 @@ export function CampaignUrlBuilder() {
               <Input
                 id="campaignMedium"
                 value={campaignData.campaignMedium}
-                onChange={(e) => setCampaignData({ ...campaignData, campaignMedium: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    campaignMedium: e.target.value,
+                  })
+                }
                 placeholder="CPC, Organic, Social"
                 required
               />
@@ -88,7 +114,12 @@ export function CampaignUrlBuilder() {
               <Input
                 id="campaignName"
                 value={campaignData.campaignName}
-                onChange={(e) => setCampaignData({ ...campaignData, campaignName: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    campaignName: e.target.value,
+                  })
+                }
                 placeholder="Summer Sale, Holiday Promotion"
                 required
               />
@@ -98,16 +129,28 @@ export function CampaignUrlBuilder() {
               <Input
                 id="campaignTerm"
                 value={campaignData.campaignTerm}
-                onChange={(e) => setCampaignData({ ...campaignData, campaignTerm: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    campaignTerm: e.target.value,
+                  })
+                }
                 placeholder="summer sale, discount code"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="campaignContent">Campaign Content (Optional)</Label>
+              <Label htmlFor="campaignContent">
+                Campaign Content (Optional)
+              </Label>
               <Input
                 id="campaignContent"
                 value={campaignData.campaignContent}
-                onChange={(e) => setCampaignData({ ...campaignData, campaignContent: e.target.value })}
+                onChange={(e) =>
+                  setCampaignData({
+                    ...campaignData,
+                    campaignContent: e.target.value,
+                  })
+                }
                 placeholder="banner ad, text link"
               />
             </div>
@@ -136,7 +179,7 @@ export function CampaignUrlBuilder() {
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateCampaignUrl()}</code>
               </pre>
             </div>
@@ -144,5 +187,5 @@ export function CampaignUrlBuilder() {
         </div>
       </CardContent>
     </Card>
-  )
-} 
+  );
+}
