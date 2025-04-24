@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Copy, Check } from "lucide-react";
+import { SEOMetaTags } from "@/components/seo-meta-tags" 
 
 export function MetaTagsGenerator() {
   const [metaData, setMetaData] = useState({
@@ -381,6 +382,7 @@ ${
           </div>
         </div>
       </CardContent>
+      <SEOMetaTags />
     </Card>
   );
 }

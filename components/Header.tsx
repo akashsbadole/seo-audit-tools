@@ -81,8 +81,6 @@ const Header = () => {
                 href="/"
                 className="block text-indigo-200 hover:text-white transition-colors"
                 onClick={(e) => {
-                  e.preventDefault();
-                  window.scrollTo({ top: 0, behavior: "smooth" });
                   setIsOpen(false);
                 }}
               >
@@ -90,40 +88,40 @@ const Header = () => {
               </Link>
             </li>
             <li>
-              <a
-                href="#seo-audit"
+              <Link
+                href="/keyword-research"
                 className="block text-indigo-200 hover:text-white transition-colors"
-                onClick={(e) => handleScroll(e, "seo-audit")}
+                onClick={() => setIsOpen(false)}
               >
-                SEO Audit Tool
-              </a>
+                Multi-Platform Research
+              </Link>
             </li>
             <li>
-              <a
-                href="#meta-tags"
+              <Link
+                href="/meta-tags-generator"
                 className="block text-indigo-200 hover:text-white transition-colors"
-                onClick={(e) => handleScroll(e, "meta-tags")}
+                onClick={() => setIsOpen(false)}
               >
                 Meta Tags Generator
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#open-graph"
+              <Link
+                href="/open-graph-generator"
                 className="block text-indigo-200 hover:text-white transition-colors"
-                onClick={(e) => handleScroll(e, "open-graph")}
+                onClick={() => setIsOpen(false)}
               >
                 Open Graph Generator
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="#campaign-url-builder"
+              <Link
+                href="/campaign-url-builder"
                 className="block text-indigo-200 hover:text-white transition-colors"
-                onClick={(e) => handleScroll(e, "campaign-url-builder")}
+                onClick={() => setIsOpen(false)}
               >
                 Campaign URL Builder
-              </a>
+              </Link>
             </li>
             <li>
               <a
