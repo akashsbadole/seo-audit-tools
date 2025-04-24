@@ -584,7 +584,6 @@ const MAX_REQUESTS = 10; // Allow 10 requests per minute per URL
 export async function GET(request: NextRequest) {
   try {
     const url = request.nextUrl.searchParams.get('url')
-    
     if (!url) {
       return NextResponse.json(
         { error: 'URL parameter is required' },
@@ -593,68 +592,118 @@ export async function GET(request: NextRequest) {
     }
 
     // Validate URL format
-    let normalizedUrl: string
     try {
-      // Remove trailing slash if present
-      const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
-      // Ensure URL has protocol
-      const urlWithProtocol = cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`
-      const urlObj = new URL(urlWithProtocol)
-      // Remove www. if present
-      const hostname = urlObj.hostname.replace(/^www\./, '')
-      urlObj.hostname = hostname
-      normalizedUrl = urlObj.toString()
+      new URL(url)
     } catch (e) {
+      console.error('Invalid URL format:', url)
       return NextResponse.json(
         { error: 'Invalid URL format' },
         { status: 400 }
       )
     }
 
-    const domain = new URL(normalizedUrl).hostname
+    const domain = new URL(url).hostname
+    console.log('Processing audit for domain:', domain)
 
-    // Try to fetch the URL with browser-like headers
-    const response = await fetch(normalizedUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': 'https://www.google.com/',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    })
-
-    // If the request is blocked or fails, use mock data
-    if (!response.ok || response.status === 403 || response.status === 429 || response.status === 400) {
-      console.log(`Using mock data for ${domain} due to ${response.status} response (bot protection or access restriction)`)
-      const mockAuditResult = generateMockAuditResult(normalizedUrl, domain)
-      return NextResponse.json(mockAuditResult)
+    // Fetch and parse the webpage
+    let response
+    try {
+      console.log('Fetching URL:', url)
+      response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; SEOAuditBot/1.0)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+        },
+        timeout: 10000, // 10 second timeout
+      })
+      console.log('Fetch response status:', response.status)
+    } catch (e) {
+      console.error('Error fetching URL:', e)
+      return NextResponse.json(
+        { error: 'Failed to fetch the webpage. Please check if the URL is accessible.' },
+        { status: 500 }
+      )
     }
 
-    const html = await response.text()
-    const $ = cheerio.load(html)
+    if (!response.ok) {
+      console.error('Fetch failed with status:', response.status)
+      return NextResponse.json(
+        { error: `Failed to fetch the webpage. Status: ${response.status}` },
+        { status: response.status }
+      )
+    }
 
-    // Perform the audit
-    const auditResult = performSEOAudit($, normalizedUrl, domain)
-
-    // Store the results
+    let html
     try {
+      html = await response.text()
+      console.log('Successfully fetched HTML content')
+    } catch (e) {
+      console.error('Error reading response text:', e)
+      return NextResponse.json(
+        { error: 'Failed to read webpage content' },
+        { status: 500 }
+      )
+    }
+
+    let $
+    try {
+      $ = cheerio.load(html)
+      console.log('Successfully parsed HTML with cheerio')
+    } catch (e) {
+      console.error('Error parsing HTML with cheerio:', e)
+      return NextResponse.json(
+        { error: 'Failed to parse webpage content' },
+        { status: 500 }
+      )
+    }
+
+    // Get IP address
+    let ipAddress
+    try {
+      const { address } = await lookup(domain)
+      ipAddress = address
+      console.log('Successfully resolved IP address:', ipAddress)
+    } catch (e) {
+      console.error('Error looking up IP:', e)
+      // Continue without IP address
+    }
+
+    // Store domain info
+    try {
+      console.log('Storing domain info for:', domain)
       await searchAndStoreDomain(domain)
+      console.log('Successfully stored domain info')
+    } catch (e) {
+      console.error('Error storing domain:', e)
+      // Continue without storing domain info
+    }
+
+    // Perform SEO audit
+    console.log('Starting SEO audit')
+    const auditResult = performSEOAudit($, url, domain)
+    console.log('Completed SEO audit')
+
+    // Update domain with report data
+    try {
+      console.log('Updating domain report')
       await updateDomainReport(domain, {
-        domainName: domain,
-        reportData: new TextEncoder().encode(JSON.stringify(auditResult))
+        ipAddress,
+        reportData: new TextEncoder().encode(JSON.stringify(auditResult)),
       })
-    } catch (dbError) {
-      console.error('Database error:', dbError)
-      // Continue even if database operations fail
+      console.log('Successfully updated domain report')
+    } catch (e) {
+      console.error('Error updating domain report:', e)
+      // Continue without updating report
     }
 
     return NextResponse.json(auditResult)
   } catch (error) {
-    console.error('Audit error:', error)
+    console.error('Unexpected error in audit API:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'An unexpected error occurred' },
+      { error: 'An unexpected error occurred while performing the SEO audit' },
       { status: 500 }
     )
   }
