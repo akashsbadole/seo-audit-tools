@@ -8,21 +8,22 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Lock } from "lucide-react";
 import { KeywordTable, KeywordData } from "@/components/keyword-table";
+import Image from 'next/image';
 
 const platforms = [
-  { id: 'google', name: 'Google', icon: '🔍', color: 'text-[#4285F4]' },
-  { id: 'youtube', name: 'YouTube', icon: '▶️', color: 'text-[#FF0000]' },
-  { id: 'bing', name: 'Bing', icon: '🔎', color: 'text-[#00B4D8]' },
-  { id: 'amazon', name: 'Amazon', icon: '📦', color: 'text-[#FF9900]' },
-  { id: 'ebay', name: 'eBay', icon: '🛍️', color: 'text-[#E53238]' },
-  { id: 'appstore', name: 'App Store', icon: '📱', color: 'text-[#0D96F6]' },
-  { id: 'playstore', name: 'Play Store', icon: '🤖', color: 'text-[#00DC82]' },
-  { id: 'instagram', name: 'Instagram', icon: '📸', color: 'text-[#E4405F]' },
-  { id: 'twitter', name: 'X (Twitter)', icon: '🐦', color: 'text-[#000000]' },
-  { id: 'pinterest', name: 'Pinterest', icon: '📌', color: 'text-[#BD081C]' },
-  { id: 'etsy', name: 'Etsy', icon: '🎨', color: 'text-[#F56400]' },
-  { id: 'tiktok', name: 'TikTok', icon: '🎵', color: 'text-[#000000]' },
-  { id: 'trends', name: 'Google Trends', icon: '📈', color: 'text-[#4285F4]' },
+  { id: 'google', name: 'Google', image: '/images/google.webp', color: 'text-[#4285F4]' },
+  { id: 'youtube', name: 'YouTube', image: '/images/youtube.webp', color: 'text-[#FF0000]' },
+  { id: 'bing', name: 'Bing', image: '/images/bing.webp', color: 'text-[#00B4D8]' },
+  { id: 'amazon', name: 'Amazon', image: '/images/amazonl.webp', color: 'text-[#FF9900]' },
+  { id: 'ebay', name: 'eBay', image: '/images/ebay.webp', color: 'text-[#E53238]' },
+  { id: 'appstore', name: 'App Store', image: '/images/app-store.webp', color: 'text-[#0D96F6]' },
+  { id: 'playstore', name: 'Play Store', image: '/images/google-play.webp', color: 'text-[#00DC82]' },
+  { id: 'instagram', name: 'Instagram', image: '/images/instagram.webp', color: 'text-[#E4405F]' },
+  { id: 'twitter', name: 'X (Twitter)', image: '/images/twitter.webp', color: 'text-[#000000]' },
+  { id: 'pinterest', name: 'Pinterest', image: '/images/pinterest.webp', color: 'text-[#BD081C]' },
+  { id: 'etsy', name: 'Etsy', image: '/images/etsy.webp', color: 'text-[#F56400]' },
+  { id: 'tiktok', name: 'TikTok', image: '/images/tiktok.webp', color: 'text-[#000000]' },
+  { id: 'trends', name: 'Google Trends', image: '/images/google-trends.webp', color: 'text-[#4285F4]' },
 ];
 
 export default function KeywordResearchPage() {
@@ -79,8 +80,16 @@ export default function KeywordResearchPage() {
                     value={p.id}
                     className={`data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${p.color}`}
                   >
-                    <span className="mr-2">{p.icon}</span>
-                    {p.name}
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src={p.image}
+                        alt={p.name}
+                        width={20}
+                        height={20}
+                        className="object-contain"
+                      />
+                      {p.name}
+                    </div>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -114,8 +123,15 @@ export default function KeywordResearchPage() {
             {keywordData.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <Badge variant="secondary" className="text-xs">
-                    {getPlatformById(platform)?.icon} {getPlatformById(platform)?.name}
+                  <Badge variant="secondary" className="text-xs flex items-center gap-2">
+                    <Image
+                      src={getPlatformById(platform)?.image || ''}
+                      alt={getPlatformById(platform)?.name || ''}
+                      width={16}
+                      height={16}
+                      className="object-contain"
+                    />
+                    {getPlatformById(platform)?.name}
                   </Badge>
                   {!isPremium && (
                     <Badge variant="outline" className="text-xs flex items-center gap-1">
