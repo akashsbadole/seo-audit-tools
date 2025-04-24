@@ -617,7 +617,7 @@ export async function GET(request: NextRequest) {
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1',
         },
-        timeout: 10000, // 10 second timeout
+        signal: AbortSignal.timeout(10000), // 10 second timeout
       })
       console.log('Fetch response status:', response.status)
     } catch (e) {
