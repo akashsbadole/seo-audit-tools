@@ -93,7 +93,7 @@ const Header = () => {
                 className="block text-indigo-200 hover:text-white transition-colors"
                 onClick={() => setIsOpen(false)}
               >
-                Multi-Platform Research
+                Keyword Research Tool
               </Link>
             </li>
             <li>
