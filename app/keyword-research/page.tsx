@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -24,6 +24,10 @@ import {
 } from "@/components/ui/select";
 import { countries, languages } from "@/data/countries";
 import KeywordDomain from "@/components/keyword-domain";
+import {
+  GoogleReCaptchaProvider,
+  useGoogleReCaptcha,
+} from "react-google-recaptcha-v3";
 
 const platforms = [
   {
@@ -106,7 +110,7 @@ const platforms = [
   },
 ];
 
-export default function KeywordResearchPage() {
+function KeywordResearchContent() {
   const [keyword, setKeyword] = useState("");
   const [platform, setPlatform] = useState("google");
   const [searchType, setSearchType] = useState("all");
@@ -115,14 +119,47 @@ export default function KeywordResearchPage() {
   const [loading, setLoading] = useState(false);
   const [keywordData, setKeywordData] = useState<KeywordData[]>([]);
   const [isPremium, setIsPremium] = useState(false);
+  const [lastSearchTime, setLastSearchTime] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const fetchSuggestions = async () => {
     if (!keyword.trim()) return;
+
+    // Check if enough time has passed since last search
+    const now = Date.now();
+    const timeSinceLastSearch = now - lastSearchTime;
+    const minDelay = 15000; // 15 seconds in milliseconds
+
+    if (timeSinceLastSearch < minDelay) {
+      const remaining = Math.ceil((minDelay - timeSinceLastSearch) / 1000);
+      setTimeRemaining(remaining);
+      return;
+    }
+
+    if (!executeRecaptcha) {
+      console.error("reCAPTCHA not loaded");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Get reCAPTCHA token
+      const token = await executeRecaptcha("keyword_research");
+
       const response = await fetch(
-        `/api/keyword-suggestions?platform=${platform}&searchType=${searchType}&keyword=${encodeURIComponent(keyword)}&country=${country}&language=${language}`
+        `/api/keyword-suggestions?platform=${platform}&searchType=${searchType}&keyword=${encodeURIComponent(keyword)}&country=${country}&language=${language}`,
+        {
+          headers: {
+            "X-Recaptcha-Token": token,
+          },
+        }
       );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch suggestions");
+      }
+
       const data = await response.json();
       const allKeywords = Array.from({ length: 100 }, (_, i) => ({
         keyword: `${data.suggestions[i % data.suggestions.length]} ${i + 1}`,
@@ -135,6 +172,7 @@ export default function KeywordResearchPage() {
         isPremium: i >= 50,
       }));
       setKeywordData(allKeywords);
+      setLastSearchTime(Date.now());
 
       // Save the search results
       try {
@@ -143,6 +181,7 @@ export default function KeywordResearchPage() {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            "X-Recaptcha-Token": token,
           },
           body: JSON.stringify({
             keyword: keyword.trim(),
@@ -172,7 +211,6 @@ export default function KeywordResearchPage() {
         );
       } catch (error) {
         console.error("Error saving keyword search:", error);
-        // You might want to show an error toast or notification here
       }
     } catch (error) {
       console.error("Error fetching suggestions:", error);
@@ -180,6 +218,17 @@ export default function KeywordResearchPage() {
       setLoading(false);
     }
   };
+
+  // Update time remaining every second
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
 
   const getPlatformById = (id: string) => platforms.find((p) => p.id === id);
 
@@ -282,14 +331,21 @@ export default function KeywordResearchPage() {
               {/* Search Button */}
               <Button
                 onClick={fetchSuggestions}
-                disabled={loading || !keyword.trim()}
-                className="rounded-full px-4 h-10 w-full sm:w-auto"
+                disabled={loading || timeRemaining > 0}
+                className="w-full sm:w-auto"
               >
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : timeRemaining > 0 ? (
+                  `Wait ${timeRemaining}s`
                 ) : (
-                  <Search className="h-4 w-4" />
+                  <Search className="mr-2 h-4 w-4" />
                 )}
+                {loading
+                  ? "Searching..."
+                  : timeRemaining > 0
+                    ? "Please wait"
+                    : "Search"}
               </Button>
             </div>
             {/* Results Table and Premium logic remain unchanged */}
@@ -327,5 +383,21 @@ export default function KeywordResearchPage() {
       </Card>
       <KeywordDomain />
     </div>
+  );
+}
+
+export default function KeywordResearchPage() {
+  return (
+    <GoogleReCaptchaProvider
+      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+      scriptProps={{
+        async: false,
+        defer: false,
+        appendTo: "head",
+        nonce: undefined,
+      }}
+    >
+      <KeywordResearchContent />
+    </GoogleReCaptchaProvider>
   );
 }

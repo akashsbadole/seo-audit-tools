@@ -1,10 +1,28 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@/lib/generated/prisma';
+import { verifyRecaptcha } from '@/lib/recaptcha';
 
 // Create a single Prisma client instance
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
+  const recaptchaToken = request.headers.get('X-Recaptcha-Token');
+
+  if (!recaptchaToken) {
+    return NextResponse.json(
+      { error: 'reCAPTCHA token is required' },
+      { status: 400 }
+    );
+  }
+
+  const isValidRecaptcha = await verifyRecaptcha(recaptchaToken);
+  if (!isValidRecaptcha) {
+    return NextResponse.json(
+      { error: 'Invalid reCAPTCHA token' },
+      { status: 403 }
+    );
+  }
+
   try {
     // Log the request headers for debugging
     // console.log('Request headers:', Object.fromEntries(request.headers.entries()));

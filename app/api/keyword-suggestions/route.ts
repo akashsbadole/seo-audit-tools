@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { verifyRecaptcha } from '@/lib/recaptcha';
 
 async function fetchYouTubeSuggestions(keyword: string): Promise<string[]> {
   try {
@@ -43,6 +44,22 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const keyword = searchParams.get('keyword');
   const platform = searchParams.get('platform');
+  const recaptchaToken = request.headers.get('X-Recaptcha-Token');
+
+  if (!recaptchaToken) {
+    return NextResponse.json(
+      { error: 'reCAPTCHA token is required' },
+      { status: 400 }
+    );
+  }
+
+  const isValidRecaptcha = await verifyRecaptcha(recaptchaToken);
+  if (!isValidRecaptcha) {
+    return NextResponse.json(
+      { error: 'Invalid reCAPTCHA token' },
+      { status: 403 }
+    );
+  }
 
   if (!keyword) {
     return NextResponse.json(

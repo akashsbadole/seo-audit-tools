@@ -79,7 +79,7 @@ const Header = () => {
             <li>
               <Link
                 href="/"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={(e) => {
                   setIsOpen(false);
                 }}
@@ -90,7 +90,7 @@ const Header = () => {
             <li>
               <Link
                 href="/keyword-research"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={() => setIsOpen(false)}
               >
                 Keyword Research Tool
@@ -99,7 +99,7 @@ const Header = () => {
             <li>
               <Link
                 href="/meta-tags-generator"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={() => setIsOpen(false)}
               >
                 Meta Tags Generator
@@ -108,7 +108,7 @@ const Header = () => {
             <li>
               <Link
                 href="/open-graph-generator"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={() => setIsOpen(false)}
               >
                 Open Graph Generator
@@ -117,7 +117,7 @@ const Header = () => {
             <li>
               <Link
                 href="/campaign-url-builder"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={() => setIsOpen(false)}
               >
                 Campaign URL Builder
@@ -126,7 +126,7 @@ const Header = () => {
             <li>
               <a
                 href="#about"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={(e) => handleScroll(e, "about")}
               >
                 About
@@ -135,7 +135,7 @@ const Header = () => {
             <li>
               <a
                 href="#contact"
-                className="block text-indigo-200 hover:text-white transition-colors"
+                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
                 onClick={(e) => handleScroll(e, "contact")}
               >
                 Contact
