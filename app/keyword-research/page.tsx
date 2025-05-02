@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Lock, Search } from "lucide-react";
 import { KeywordTable, KeywordData } from "@/components/keyword-table";
 import Image from "next/image";
-import { prisma } from "@/lib/prisma";
 import {
   Select,
   SelectTrigger,
@@ -136,12 +135,17 @@ export default function KeywordResearchPage() {
         isPremium: i >= 50,
       }));
       setKeywordData(allKeywords);
+
+      // Save the search results
       try {
-        await fetch("/api/save-keyword-search", {
+        const saveResponse = await fetch("/api/save-keyword-search", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify({
-            keyword,
+            keyword: keyword.trim(),
             platform,
             searchType,
             country,
@@ -149,8 +153,26 @@ export default function KeywordResearchPage() {
             results: allKeywords,
           }),
         });
+
+        const responseData = await saveResponse.json();
+
+        if (!saveResponse.ok) {
+          console.error(
+            "Failed to save keyword search:",
+            JSON.stringify(responseData, null, 2)
+          );
+          throw new Error(
+            responseData.error || "Failed to save keyword search"
+          );
+        }
+
+        console.log(
+          "Successfully saved keyword search:",
+          JSON.stringify(responseData, null, 2)
+        );
       } catch (error) {
         console.error("Error saving keyword search:", error);
+        // You might want to show an error toast or notification here
       }
     } catch (error) {
       console.error("Error fetching suggestions:", error);
@@ -161,22 +183,6 @@ export default function KeywordResearchPage() {
 
   const getPlatformById = (id: string) => platforms.find((p) => p.id === id);
 
-  // Minimal country/language lists for demo
-  // const countries = [
-  //   { value: 'global', label: 'Global / Worldwide (All Countries)' },
-  //   { value: 'us', label: 'United States' },
-  //   { value: 'gb', label: 'United Kingdom' },
-  //   { value: 'in', label: 'India' },
-  //   { value: 'de', label: 'Germany' },
-  //   { value: 'fr', label: 'France' },
-  // ];
-  // const languages = [
-  //   { value: 'en', label: 'English' },
-  //   { value: 'es', label: 'Spanish' },
-  //   { value: 'de', label: 'German' },
-  //   { value: 'fr', label: 'French' },
-  //   { value: 'hi', label: 'Hindi' },
-  // ];
   const searchTypes = [
     { value: "all", label: "All" },
     { value: "web", label: "Web" },
