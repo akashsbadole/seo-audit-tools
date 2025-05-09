@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import * as cheerio from "cheerio"
 import type { SEOAuditResult } from "@/types/seo-audit"
 import { searchAndStoreDomain, updateDomainReport } from '@/lib/db'
+import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import dns from 'dns'
 import { promisify } from 'util'
 
@@ -582,15 +585,32 @@ const WINDOW_SIZE = 60 * 1000; // 1 minute window
 const MAX_REQUESTS = 10; // Allow 10 requests per minute per URL
 
 export async function GET(request: NextRequest) {
-  try {
-    const url = request.nextUrl.searchParams.get('url')
-    if (!url) {
-      return NextResponse.json(
-        { error: 'URL parameter is required' },
-        { status: 400 }
-      )
-    }
+  const session = await getServerSession(authOptions)
+  
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    )
+  }
 
+  const usageCheck = await checkUsageLimit('report')
+  if (!usageCheck.allowed) {
+    return NextResponse.json(
+      { error: usageCheck.message },
+      { status: 403 }
+    )
+  }
+
+  const url = request.nextUrl.searchParams.get('url')
+  if (!url) {
+    return NextResponse.json(
+      { error: 'URL parameter is required' },
+      { status: 400 }
+    )
+  }
+
+  try {
     // Validate URL format
     try {
       new URL(url)
@@ -699,11 +719,14 @@ export async function GET(request: NextRequest) {
       // Continue without updating report
     }
 
+    // After successful audit, increment usage
+    await incrementUsage('report', parseInt(session.user.id))
+
     return NextResponse.json(auditResult)
   } catch (error) {
-    console.error('Unexpected error in audit API:', error)
+    console.error('Error performing SEO audit:', error)
     return NextResponse.json(
-      { error: 'An unexpected error occurred while performing the SEO audit' },
+      { error: 'Failed to perform SEO audit' },
       { status: 500 }
     )
   }

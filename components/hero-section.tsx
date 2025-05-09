@@ -45,28 +45,28 @@ export function HeroSection() {
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link href="/keyword-research" className="group">
-              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-indigo-800/70 transition-colors">
+              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-blue-800/70 transition-colors shadow">
                 <h3 className="text-white font-medium group-hover:text-indigo-200 text-[14px]">
                   Keyword Research Tool
                 </h3>
               </div>
             </Link>
             <Link href="/meta-tags-generator" className="group">
-              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-indigo-800/70 transition-colors">
+              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-blue-800/70 transition-colors shadow">
                 <h3 className="text-white font-medium group-hover:text-indigo-200 text-[14px]">
                   Meta Tags Generator
                 </h3>
               </div>
             </Link>
             <Link href="/open-graph-generator" className="group">
-              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-indigo-800/70 transition-colors">
+              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-blue-800/70 transition-colors shadow">
                 <h3 className="text-white font-medium group-hover:text-indigo-200 text-[14px]">
                   Open Graph Generator
                 </h3>
               </div>
             </Link>
             <Link href="/campaign-url-builder" className="group">
-              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-indigo-800/70 transition-colors">
+              <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-blue-800/70 transition-colors shadow">
                 <h3 className="text-white font-medium group-hover:text-indigo-200 text-[14px]">
                   Campaign URL Builder
                 </h3>

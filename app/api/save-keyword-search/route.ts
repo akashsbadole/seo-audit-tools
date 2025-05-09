@@ -1,11 +1,31 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@/lib/generated/prisma';
 import { verifyRecaptcha } from '@/lib/recaptcha';
+import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Create a single Prisma client instance
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
+  const session = await getServerSession(authOptions);
+  
+  if (!session?.user?.email) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  const usageCheck = await checkUsageLimit('search');
+  if (!usageCheck.allowed) {
+    return NextResponse.json(
+      { error: usageCheck.message },
+      { status: 403 }
+    );
+  }
+
   const recaptchaToken = request.headers.get('X-Recaptcha-Token');
 
   if (!recaptchaToken) {
@@ -55,9 +75,13 @@ export async function POST(request: Request) {
         searchType: String(searchType),
         country: String(country),
         language: String(language),
-        results: results
+        results: results,
+        userId: parseInt(session.user.id)
       }
     });
+
+    // Increment usage after successful save
+    await incrementUsage('search', parseInt(session.user.id));
 
     return NextResponse.json({
       success: true,
