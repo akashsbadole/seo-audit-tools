@@ -387,12 +387,23 @@ function KeywordResearchContent() {
 }
 
 export default function KeywordResearchPage() {
+  const reCaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
+  if (!reCaptchaKey) {
+    console.error("reCAPTCHA site key is not configured");
+    return (
+      <div className="p-4 text-red-500">
+        Error: reCAPTCHA configuration is missing. Please contact support.
+      </div>
+    );
+  }
+
   return (
     <GoogleReCaptchaProvider
-      reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+      reCaptchaKey={reCaptchaKey}
       scriptProps={{
-        async: false,
-        defer: false,
+        async: true,
+        defer: true,
         appendTo: "head",
         nonce: undefined,
       }}
