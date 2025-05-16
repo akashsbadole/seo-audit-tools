@@ -113,6 +113,19 @@ interface PreviewResult {
       desktop: string;
       mobile: string;
     };
+    sentiment: {
+      score: number;
+      label: string;
+    };
+    keywords: {
+      word: string;
+      count: number;
+      density: number;
+    }[];
+    readability: {
+      score: number;
+      level: string;
+    };
   };
 }
 
@@ -281,7 +294,7 @@ export async function POST(request: Request) {
         result = await processTitlePreview(url, customTitle);
         break;
       case "DESCRIPTION_PREVIEW":
-        result = await processDescriptionPreview(url, customDescription);
+        result = await processDescriptionPreview(url, customDescription, config?.sitemapUrl, config);
         break;
       case "STRUCTURED_DATA":
         result = await processStructuredData(url, customJson);
@@ -990,8 +1003,6 @@ async function processTitlePreview(url: string, customTitle?: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-
-    // Use cheerio instead of DOMParser
     const $ = cheerio.load(html);
 
     // Get title
@@ -1029,6 +1040,30 @@ async function processTitlePreview(url: string, customTitle?: string) {
       issues.push("Avoid generic title beginnings");
     }
 
+    // Calculate sentiment
+    const sentiment = analyzeSentiment(title);
+
+    // Calculate readability
+    const readability = calculateReadability(title);
+
+    // Analyze keywords
+    const words = title.toLowerCase().split(/\s+/);
+    const wordFrequency: { [key: string]: number } = {};
+    words.forEach(word => {
+      if (word.length > 3) {
+        wordFrequency[word] = (wordFrequency[word] || 0) + 1;
+      }
+    });
+
+    const keywords = Object.entries(wordFrequency)
+      .map(([word, count]) => ({
+        word,
+        count,
+        density: (count / words.length) * 100
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     return {
       preview: {
         title,
@@ -1037,7 +1072,10 @@ async function processTitlePreview(url: string, customTitle?: string) {
         preview: {
           desktop: desktopPreview,
           mobile: mobilePreview
-        }
+        },
+        sentiment,
+        keywords,
+        readability
       }
     };
   } catch (error) {
@@ -1046,18 +1084,25 @@ async function processTitlePreview(url: string, customTitle?: string) {
   }
 }
 
-async function processDescriptionPreview(url: string, customDescription?: string) {
+async function processDescriptionPreview(url: string, customDescription?: string, targetKeywords?: string, options?: { showEmojis: boolean; autoOptimize: boolean }) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const $ = cheerio.load(html);
 
     // Get description
-    const description = customDescription || doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+    let description = customDescription || $('meta[name="description"]').attr('content') || '';
     const length = description.length;
+
+    // Auto-optimize if enabled
+    if (options?.autoOptimize) {
+      description = autoOptimizeDescription(description);
+    }
+
+    // Add emojis if enabled
+    if (options?.showEmojis) {
+      description = addRelevantEmojis(description);
+    }
 
     // Generate previews
     const desktopPreview = length > 160 ? description.substring(0, 160) + '...' : description;
@@ -1090,7 +1135,7 @@ async function processDescriptionPreview(url: string, customDescription?: string
       issues.push("Avoid using ellipsis or special characters");
     }
 
-    // Check for keyword stuffing
+    // Analyze keywords
     const words = description.toLowerCase().split(/\s+/);
     const wordFrequency: { [key: string]: number } = {};
     words.forEach(word => {
@@ -1099,11 +1144,33 @@ async function processDescriptionPreview(url: string, customDescription?: string
       }
     });
 
-    Object.entries(wordFrequency).forEach(([word, count]) => {
-      if (count > 3) {
-        issues.push(`Possible keyword stuffing: "${word}" appears ${count} times`);
+    // Calculate keyword density and check for stuffing
+    const keywords = Object.entries(wordFrequency)
+      .map(([word, count]) => ({
+        word,
+        count,
+        density: (count / words.length) * 100
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Check target keywords presence
+    if (targetKeywords) {
+      const targetKeywordsList = targetKeywords.toLowerCase().split(',').map(k => k.trim());
+      const missingKeywords = targetKeywordsList.filter(keyword =>
+        !description.toLowerCase().includes(keyword)
+      );
+
+      if (missingKeywords.length > 0) {
+        issues.push(`Missing target keywords: ${missingKeywords.join(', ')}`);
       }
-    });
+    }
+
+    // Calculate sentiment
+    const sentiment = analyzeSentiment(description);
+
+    // Calculate readability
+    const readability = calculateReadability(description);
 
     return {
       preview: {
@@ -1113,7 +1180,10 @@ async function processDescriptionPreview(url: string, customDescription?: string
         preview: {
           desktop: desktopPreview,
           mobile: mobilePreview
-        }
+        },
+        sentiment,
+        keywords,
+        readability
       }
     };
   } catch (error) {
@@ -1122,15 +1192,124 @@ async function processDescriptionPreview(url: string, customDescription?: string
   }
 }
 
+// Helper function to auto-optimize description
+function autoOptimizeDescription(description: string): string {
+  let optimized = description;
+
+  // Remove multiple spaces
+  optimized = optimized.replace(/\s+/g, ' ').trim();
+
+  // Capitalize first letter of sentences
+  optimized = optimized.replace(/(^\w|\.\s+\w)/g, letter => letter.toUpperCase());
+
+  // Remove redundant punctuation
+  optimized = optimized.replace(/[!?.,]+(?=[!?.,])/g, '');
+
+  // Ensure it ends with proper punctuation
+  if (!optimized.match(/[.!?]$/)) {
+    optimized += '.';
+  }
+
+  return optimized;
+}
+
+// Helper function to add relevant emojis
+function addRelevantEmojis(description: string): string {
+  const emojiMap: { [key: string]: string } = {
+    'best': '⭐',
+    'new': '🆕',
+    'save': '💰',
+    'free': '🎁',
+    'fast': '⚡',
+    'secure': '🔒',
+    'learn': '📚',
+    'guide': '📖',
+    'tips': '💡',
+    'expert': '👨‍💼',
+    'professional': '👨‍💼',
+    'guarantee': '✅',
+    'certified': '✔️',
+    'award': '🏆',
+    'winning': '🏆',
+    'top': '🔝',
+    'premium': '💎',
+    'exclusive': '💫',
+    'trending': '📈',
+    'popular': '🔥'
+  };
+
+  let result = description;
+  Object.entries(emojiMap).forEach(([keyword, emoji]) => {
+    if (result.toLowerCase().includes(keyword)) {
+      // Add emoji at the end to not disrupt the text
+      result = result.trim() + ' ' + emoji;
+    }
+  });
+
+  return result;
+}
+
+// Helper function to analyze sentiment
+function analyzeSentiment(text: string): { score: number; label: string } {
+  const positiveWords = new Set([
+    'best', 'amazing', 'awesome', 'excellent', 'great', 'perfect',
+    'innovative', 'leading', 'premium', 'professional', 'expert',
+    'trusted', 'reliable', 'proven', 'guaranteed', 'exclusive'
+  ]);
+
+  const negativeWords = new Set([
+    'bad', 'poor', 'worst', 'terrible', 'avoid', 'never',
+    'problem', 'issue', 'difficult', 'hard', 'complicated',
+    'expensive', 'costly', 'risky', 'dangerous', 'unreliable'
+  ]);
+
+  const words = text.toLowerCase().split(/\s+/);
+  let score = 0;
+
+  words.forEach(word => {
+    if (positiveWords.has(word)) score += 1;
+    if (negativeWords.has(word)) score -= 1;
+  });
+
+  let label;
+  if (score > 2) label = 'Very Positive';
+  else if (score > 0) label = 'Positive';
+  else if (score === 0) label = 'Neutral';
+  else if (score > -2) label = 'Negative';
+  else label = 'Very Negative';
+
+  return { score, label };
+}
+
+// Helper function to calculate readability
+function calculateReadability(text: string): { score: number; level: string } {
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
+  const syllables = words.reduce((count, word) => count + countSyllables(word), 0);
+
+  // Flesch Reading Ease score
+  const score = 206.835 - 1.015 * (words.length / sentences.length) - 84.6 * (syllables / words.length);
+
+  let level;
+  if (score >= 90) level = 'Very Easy';
+  else if (score >= 80) level = 'Easy';
+  else if (score >= 70) level = 'Fairly Easy';
+  else if (score >= 60) level = 'Standard';
+  else if (score >= 50) level = 'Fairly Difficult';
+  else if (score >= 30) level = 'Difficult';
+  else level = 'Very Difficult';
+
+  return { score, level };
+}
+
 async function processStructuredData(url: string, customJson?: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+    const $ = cheerio.load(html);
 
     // Get all script tags with type="application/ld+json"
-    const jsonLdScripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+    const jsonLdScripts = $('script[type="application/ld+json"]').toArray();
 
     let jsonData;
     if (customJson) {
@@ -1141,7 +1320,7 @@ async function processStructuredData(url: string, customJson?: string) {
       }
     } else if (jsonLdScripts.length > 0) {
       try {
-        jsonData = JSON.parse(jsonLdScripts[0].textContent || "{}");
+        jsonData = JSON.parse($(jsonLdScripts[0]).text() || "{}");
       } catch (error) {
         throw new Error("Invalid JSON-LD format found on page");
       }
@@ -1233,12 +1412,11 @@ async function processCanonicalURL(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
+    const $ = cheerio.load(html);
 
     // Find canonical link
-    const canonicalLink = doc.querySelector('link[rel="canonical"]');
-    const canonicalUrl = canonicalLink?.getAttribute("href") || null;
+    const canonicalLink = $('link[rel="canonical"]');
+    const canonicalUrl = canonicalLink.attr("href") || null;
 
     const issues = [];
     let isSelfReferencing = false;
