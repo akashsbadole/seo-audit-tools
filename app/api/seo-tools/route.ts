@@ -9,6 +9,16 @@ interface HeaderTag {
   issues: string[];
 }
 
+interface InternalLink {
+  url: string;
+  text: string;
+  isBroken: boolean;
+  statusCode: number;
+  isNoFollow: boolean;
+  isExternal: boolean;
+  anchorText: string;
+}
+
 function isValidUrl(url: string): boolean {
   try {
     new URL(url);
@@ -224,15 +234,16 @@ async function processInternalLinks(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(html);
 
     // Get all links
-    const links = Array.from(doc.getElementsByTagName('a')).map(link => {
-      const href = link.getAttribute('href');
-      const text = link.textContent?.trim() || '';
-      const rel = link.getAttribute('rel') || '';
+    const links = $('a').map((i: number, el: any) => {
+      const $link = $(el);
+      const href = $link.attr('href');
+      const text = $link.text().trim();
+      const rel = $link.attr('rel') || '';
 
       return {
         url: href || '',
@@ -242,12 +253,12 @@ async function processInternalLinks(url: string) {
         isNoFollow: rel.includes('nofollow'),
         isExternal: href?.startsWith('http') || false,
         anchorText: text
-      };
-    }).filter(link => link.url); // Remove links without URLs
+      } as InternalLink;
+    }).get().filter((link: InternalLink) => link.url); // Remove links without URLs
 
     // Check each link
     const checkedLinks = await Promise.all(
-      links.map(async (link) => {
+      links.map(async (link: InternalLink) => {
         if (!link.url) return null;
         try {
           const response = await fetch(link.url);

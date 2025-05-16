@@ -35,7 +35,7 @@ export function InternalLinkingAnalyzer() {
       }
 
       const data = await response.json();
-      setResults(data.links);
+      setResults(data.result.links);
       toast.success("Internal links analysis complete!");
     } catch (error) {
       toast.error("Failed to analyze internal links");
