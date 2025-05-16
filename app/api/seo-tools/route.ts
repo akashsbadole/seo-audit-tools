@@ -12,13 +12,153 @@ interface HeaderTag {
 
 interface InternalLink {
   url: string;
-  text: string;
-  isBroken: boolean;
-  statusCode: number;
-  isNoFollow: boolean;
-  isExternal: boolean;
+  sourceUrl: string;
   anchorText: string;
+  statusCode: number;
+  error?: string;
+  isInternal?: boolean;
 }
+
+interface RobotsTxtConfig {
+  userAgents: string[];
+  allowPaths: string[];
+  disallowPaths: string[];
+  sitemapUrl: string;
+  crawlDelay: number;
+  customRules: string[];
+}
+
+interface MetaTagsResult {
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
+interface KeywordDensityResult {
+  keywords: Array<{
+    word: string;
+    count: number;
+    density: number;
+  }>;
+}
+
+interface HeaderTagsResult {
+  headers: HeaderTag[];
+}
+
+interface InternalLinksResult {
+  links: InternalLink[];
+}
+
+interface AltTextResult {
+  images: {
+    src: string;
+    alt: string | null;
+    issues: string[];
+  }[];
+}
+
+interface RobotsTxtResult {
+  content: string;
+}
+
+interface SitemapResult {
+  content: string;
+  source: string;
+  urlCount?: number;
+}
+
+interface SEOScoreResult {
+  score: {
+    overall: number;
+    categories: {
+      technical: number;
+      content: number;
+      performance: number;
+      accessibility: number;
+    };
+    issues: {
+      critical: string[];
+      warning: string[];
+      info: string[];
+    };
+  };
+}
+
+interface ReadabilityResult {
+  score: {
+    overall: number;
+    metrics: {
+      fleschKincaid: number;
+      gunningFog: number;
+      colemanLiau: number;
+      smog: number;
+      automatedReadability: number;
+    };
+    suggestions: string[];
+    wordCount: number;
+    sentenceCount: number;
+    paragraphCount: number;
+    averageWordsPerSentence: number;
+  };
+}
+
+interface PreviewResult {
+  preview: {
+    title?: string;
+    description?: string;
+    length: number;
+    issues: string[];
+    preview: {
+      desktop: string;
+      mobile: string;
+    };
+  };
+}
+
+interface StructuredDataResult {
+  validation: {
+    valid: boolean;
+    type: string;
+    issues: Array<{
+      severity: string;
+      message: string;
+      path: string;
+    }>;
+    preview: {
+      json: any;
+      formatted: string;
+    };
+  };
+}
+
+interface CanonicalURLResult {
+  check: {
+    hasCanonical: boolean;
+    canonicalUrl: string | null;
+    isSelfReferencing: boolean;
+    isAbsolute: boolean;
+    matchesCurrentUrl: boolean;
+    issues: Array<{
+      severity: string;
+      message: string;
+    }>;
+  };
+}
+
+type ToolResult =
+  | MetaTagsResult
+  | KeywordDensityResult
+  | HeaderTagsResult
+  | InternalLinksResult
+  | AltTextResult
+  | RobotsTxtResult
+  | SitemapResult
+  | SEOScoreResult
+  | ReadabilityResult
+  | PreviewResult
+  | StructuredDataResult
+  | CanonicalURLResult;
 
 function isValidUrl(url: string): boolean {
   try {
@@ -62,7 +202,7 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
 
 export async function POST(request: Request) {
   try {
-    const { toolType, url, customTitle, customDescription, customJson } = await request.json();
+    const { toolType, url, customTitle, customDescription, customJson, config } = await request.json();
 
     if (!toolType || !url) {
       return NextResponse.json(
@@ -105,7 +245,7 @@ export async function POST(request: Request) {
     }
 
     // Process the tool request
-    let result;
+    let result: ToolResult;
     switch (toolType) {
       case "META_TAGS":
         result = await processMetaTags(url, customTitle, customDescription);
@@ -126,7 +266,7 @@ export async function POST(request: Request) {
         result = await processBrokenLinks(url);
         break;
       case "ROBOTS_TXT":
-        result = await processRobotsTxt(url);
+        result = await processRobotsTxt(url, config);
         break;
       case "SITEMAP":
         result = await processSitemap(url);
@@ -157,7 +297,7 @@ export async function POST(request: Request) {
     }
 
     // Return the result directly without saving to database
-    return NextResponse.json({ result });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error processing tool request:", error);
     return new Response("Internal server error", { status: 500 });
@@ -265,51 +405,36 @@ async function processInternalLinks(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-
-    // Use cheerio instead of DOMParser
-    const cheerio = require('cheerio');
     const $ = cheerio.load(html);
 
-    // Get all links
-    const links = $('a').map((i: number, el: any) => {
-      const $link = $(el);
-      const href = $link.attr('href');
-      const text = $link.text().trim();
-      const rel = $link.attr('rel') || '';
+    const links: InternalLink[] = [];
+    $('a').each((_, element) => {
+      const href = $(element).attr('href');
+      if (!href) return;
 
-      return {
-        url: href || '',
-        text,
-        isBroken: false, // Will be checked later
-        statusCode: 200,
-        isNoFollow: rel.includes('nofollow'),
-        isExternal: href?.startsWith('http') || false,
-        anchorText: text
-      } as InternalLink;
-    }).get().filter((link: InternalLink) => link.url); // Remove links without URLs
+      try {
+        const absoluteUrl = href.startsWith('http') ? href : new URL(href, url).href;
+        const isInternal = new URL(absoluteUrl).hostname === new URL(url).hostname;
 
-    // Check each link
-    const checkedLinks = await Promise.all(
-      links.map(async (link: InternalLink) => {
-        if (!link.url) return null;
-        try {
-          const response = await fetch(link.url);
-          return {
-            ...link,
-            isBroken: !response.ok,
-            statusCode: response.status
-          };
-        } catch (error) {
-          return {
-            ...link,
-            isBroken: true,
-            statusCode: 0
-          };
-        }
-      })
-    );
+        links.push({
+          url: absoluteUrl,
+          sourceUrl: url,
+          anchorText: $(element).text().trim(),
+          statusCode: 200,
+          isInternal
+        });
+      } catch (error) {
+        links.push({
+          url: href,
+          sourceUrl: url,
+          anchorText: $(element).text().trim(),
+          statusCode: 0,
+          error: error instanceof Error ? error.message : 'Invalid URL'
+        });
+      }
+    });
 
-    return { links: checkedLinks.filter((link): link is NonNullable<typeof link> => link !== null) };
+    return { links };
   } catch (error) {
     console.error("Error processing internal links:", error);
     throw new Error("Failed to analyze internal links");
@@ -418,21 +543,65 @@ async function processBrokenLinks(url: string) {
   }
 }
 
-async function processRobotsTxt(url: string) {
+async function processRobotsTxt(url: string, config?: RobotsTxtConfig) {
   try {
-    const response = await fetch(url);
-    const html = await response.text();
+    if (!config) {
+      // If no config is provided, try to fetch existing robots.txt
+      const robotsTxtUrl = new URL('/robots.txt', url).href;
+      const response = await fetch(robotsTxtUrl);
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch robots.txt: ${response.status} ${response.statusText}`);
+      }
 
-    // Get robots.txt content
-    const robotsTxt = doc.querySelector('pre')?.textContent || '';
+      const content = await response.text();
+      return { content };
+    }
 
-    return {
-      content: robotsTxt.trim(),
-    };
+    // Generate robots.txt based on provided configuration
+    let content = '';
+
+    // Add User-agents and their rules
+    config.userAgents.forEach((agent) => {
+      if (agent) {
+        content += `User-agent: ${agent}\n`;
+
+        // Add crawl delay if specified
+        if (config.crawlDelay > 0) {
+          content += `Crawl-delay: ${config.crawlDelay}\n`;
+        }
+
+        // Add allow rules
+        config.allowPaths.forEach((path) => {
+          if (path) {
+            content += `Allow: ${path}\n`;
+          }
+        });
+
+        // Add disallow rules
+        config.disallowPaths.forEach((path) => {
+          if (path) {
+            content += `Disallow: ${path}\n`;
+          }
+        });
+
+        content += '\n';
+      }
+    });
+
+    // Add sitemap if specified
+    if (config.sitemapUrl) {
+      content += `Sitemap: ${config.sitemapUrl}\n\n`;
+    }
+
+    // Add custom rules
+    config.customRules.forEach((rule) => {
+      if (rule) {
+        content += `${rule}\n`;
+      }
+    });
+
+    return { content: content.trim() };
   } catch (error) {
     console.error("Error processing robots.txt:", error);
     throw new Error("Failed to generate robots.txt");

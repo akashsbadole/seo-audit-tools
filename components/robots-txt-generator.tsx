@@ -45,14 +45,30 @@ export function RobotsTxtGenerator() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate robots.txt");
+        const errorData = await response.text();
+        throw new Error(errorData || "Failed to generate robots.txt");
       }
 
       const data = await response.json();
+      if (!data.content) {
+        throw new Error("Invalid response format");
+      }
+
       setGeneratedContent(data.content);
       toast.success("Robots.txt generated successfully!");
+
+      // Automatically trigger download after successful generation
+      const blob = new Blob([data.content], { type: 'text/plain' });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = 'robots.txt';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(downloadUrl);
+      document.body.removeChild(a);
     } catch (error) {
-      toast.error("Failed to generate robots.txt");
+      toast.error(error instanceof Error ? error.message : "Failed to generate robots.txt");
       console.error(error);
     }
   };
@@ -112,6 +128,25 @@ export function RobotsTxtGenerator() {
       ...config,
       customRules: newRules,
     });
+  };
+
+  const downloadRobotsTxt = () => {
+    if (!generatedContent) return;
+
+    // Create a blob with the content
+    const blob = new Blob([generatedContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary link and trigger download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'robots.txt';
+    document.body.appendChild(a);
+    a.click();
+    
+    // Clean up
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
   return (
@@ -224,23 +259,18 @@ export function RobotsTxtGenerator() {
 
         {generatedContent && (
           <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Generated Robots.txt</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Generated Robots.txt</h3>
+              <Button variant="outline" onClick={downloadRobotsTxt}>
+                Download robots.txt
+              </Button>
+            </div>
             <div className="relative">
               <Textarea
                 value={generatedContent}
                 readOnly
                 className="font-mono h-64"
               />
-              <Button
-                variant="outline"
-                className="absolute top-2 right-2"
-                onClick={() => {
-                  navigator.clipboard.writeText(generatedContent);
-                  toast.success("Copied to clipboard!");
-                }}
-              >
-                Copy
-              </Button>
             </div>
           </div>
         )}

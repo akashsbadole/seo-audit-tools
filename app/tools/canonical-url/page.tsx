@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CanonicalUrlPage() {
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container p-50 space-y-8">
       {/* Tool Introduction */}
       <Card>
         <CardHeader>
