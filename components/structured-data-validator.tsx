@@ -43,15 +43,24 @@ export function StructuredDataValidator() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to validate structured data");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.error || 
+          `Failed to validate structured data (${response.status})`
+        );
       }
 
       const data = await response.json();
+      if (!data.validation) {
+        throw new Error("Invalid response format from server");
+      }
+      
       setValidation(data.validation);
       toast.success("Structured data validation completed!");
     } catch (error) {
-      toast.error("Failed to validate structured data");
-      console.error(error);
+      const message = error instanceof Error ? error.message : "Failed to validate structured data";
+      toast.error(message);
+      console.error("Structured data validation error:", error);
     }
   };
 
@@ -70,12 +79,20 @@ export function StructuredDataValidator() {
             id="customJson"
             value={customJson}
             onChange={(e) => setCustomJson(e.target.value)}
-            placeholder="Enter custom JSON-LD to validate"
+            placeholder={`Enter only the JSON-LD content, not the script tag. Example:
+
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "My Article",
+  "datePublished": "2024-01-01"
+}`}
             className="h-48 font-mono"
           />
-          <p className="text-sm text-muted-foreground">
-            Leave empty to validate the current page's structured data
-          </p>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>Leave empty to validate the current page's structured data</p>
+            <p>⚠️ Only paste the JSON content, not the &lt;script&gt; tag</p>
+          </div>
         </div>
 
         {validation && (

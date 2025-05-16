@@ -224,9 +224,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const { userId } = await auth();
-    if (!userId) {
-      return new Response("Unauthorized", { status: 401 });
+    // Make authentication optional
+    try {
+      const { userId } = await auth();
+      if (userId) {
+        // User is authenticated, could do additional things here in the future
+      }
+    } catch (error) {
+      // Continue without authentication
+      console.log("User not authenticated, continuing as anonymous");
     }
 
     // Validate tool type
@@ -249,71 +255,87 @@ export async function POST(request: Request) {
     ];
 
     if (!validToolTypes.includes(toolType)) {
-      return new Response("Invalid tool type", { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid tool type" },
+        { status: 400 }
+      );
     }
 
     // Validate URL
     if (!url || !isValidUrl(url)) {
-      return new Response("Invalid URL", { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid URL format" },
+        { status: 400 }
+      );
     }
 
     // Process the tool request
     let result: ToolResult;
-    switch (toolType) {
-      case "META_TAGS":
-        result = await processMetaTags(url, customTitle, customDescription);
-        break;
-      case "KEYWORD_DENSITY":
-        result = await processKeywordDensity(url);
-        break;
-      case "HEADER_TAGS":
-        result = await processHeaderTags(url);
-        break;
-      case "INTERNAL_LINKS":
-        result = await processInternalLinks(url);
-        break;
-      case "ALT_TEXT":
-        result = await processAltText(url);
-        break;
-      case "BROKEN_LINKS":
-        result = await processBrokenLinks(url);
-        break;
-      case "ROBOTS_TXT":
-        result = await processRobotsTxt(url, config);
-        break;
-      case "SITEMAP":
-        result = await processSitemap(url);
-        break;
-      case "SEO_SCORE":
-        result = await processSEOScore(url);
-        break;
-      case "READABILITY":
-        result = await processReadability(url);
-        break;
-      case "TITLE_PREVIEW":
-        result = await processTitlePreview(url, customTitle);
-        break;
-      case "DESCRIPTION_PREVIEW":
-        result = await processDescriptionPreview(url, customDescription, config?.sitemapUrl, config);
-        break;
-      case "STRUCTURED_DATA":
-        result = await processStructuredData(url, customJson);
-        break;
-      case "CANONICAL_URL":
-        result = await processCanonicalURL(url);
-        break;
-      default:
-        return NextResponse.json(
-          { error: "Invalid tool type" },
-          { status: 400 }
-        );
+    try {
+      switch (toolType) {
+        case "META_TAGS":
+          result = await processMetaTags(url, customTitle, customDescription);
+          break;
+        case "KEYWORD_DENSITY":
+          result = await processKeywordDensity(url);
+          break;
+        case "HEADER_TAGS":
+          result = await processHeaderTags(url);
+          break;
+        case "INTERNAL_LINKS":
+          result = await processInternalLinks(url);
+          break;
+        case "ALT_TEXT":
+          result = await processAltText(url);
+          break;
+        case "BROKEN_LINKS":
+          result = await processBrokenLinks(url);
+          break;
+        case "ROBOTS_TXT":
+          result = await processRobotsTxt(url, config);
+          break;
+        case "SITEMAP":
+          result = await processSitemap(url);
+          break;
+        case "SEO_SCORE":
+          result = await processSEOScore(url);
+          break;
+        case "READABILITY":
+          result = await processReadability(url);
+          break;
+        case "TITLE_PREVIEW":
+          result = await processTitlePreview(url, customTitle);
+          break;
+        case "DESCRIPTION_PREVIEW":
+          result = await processDescriptionPreview(url, customDescription, config?.sitemapUrl, config);
+          break;
+        case "STRUCTURED_DATA":
+          result = await processStructuredData(url, customJson);
+          break;
+        case "CANONICAL_URL":
+          result = await processCanonicalURL(url);
+          break;
+        default:
+          return NextResponse.json(
+            { error: "Invalid tool type" },
+            { status: 400 }
+          );
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Tool processing error" },
+        { status: 500 }
+      );
     }
 
-    // Return the result directly without saving to database
+    // Return the result
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error processing tool request:", error);
-    return new Response("Internal server error", { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -1305,6 +1327,10 @@ function calculateReadability(text: string): { score: number; level: string } {
 async function processStructuredData(url: string, customJson?: string) {
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+    }
+
     const html = await response.text();
     const $ = cheerio.load(html);
 
@@ -1316,16 +1342,20 @@ async function processStructuredData(url: string, customJson?: string) {
       try {
         jsonData = JSON.parse(customJson);
       } catch (error) {
-        throw new Error("Invalid JSON format in custom input");
+        throw new Error("Invalid JSON format in custom input: " + (error instanceof Error ? error.message : "Parse error"));
       }
     } else if (jsonLdScripts.length > 0) {
       try {
-        jsonData = JSON.parse($(jsonLdScripts[0]).text() || "{}");
+        const scriptContent = $(jsonLdScripts[0]).text();
+        if (!scriptContent) {
+          throw new Error("Empty JSON-LD script tag found");
+        }
+        jsonData = JSON.parse(scriptContent);
       } catch (error) {
-        throw new Error("Invalid JSON-LD format found on page");
+        throw new Error("Invalid JSON-LD format found on page: " + (error instanceof Error ? error.message : "Parse error"));
       }
     } else {
-      throw new Error("No structured data found on page");
+      throw new Error("No structured data found on page: No JSON-LD script tags present");
     }
 
     // Basic validation
@@ -1404,7 +1434,7 @@ async function processStructuredData(url: string, customJson?: string) {
     };
   } catch (error) {
     console.error("Error processing structured data:", error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : "Unknown error processing structured data");
   }
 }
 
