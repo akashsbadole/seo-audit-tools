@@ -173,41 +173,44 @@ async function processHeaderTags(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(html);
 
     // Get all header tags
     const headers: HeaderTag[] = [];
-    for (let level = 1; level <= 6; level++) {
-      const elements = doc.getElementsByTagName(`h${level}`);
-      for (let i = 0; i < elements.length; i++) {
-        const element = elements[i];
-        const text = element.textContent?.trim() || '';
-        const issues: string[] = [];
+    let previousLevel = 0;
 
-        // Check for common issues
-        if (text.length === 0) {
-          issues.push("Empty header");
-        }
-        if (text.length > 70) {
-          issues.push("Header is too long");
-        }
-        if (level === 1 && i > 0) {
-          issues.push("Multiple H1 tags found");
-        }
-        if (level > 1 && !element.previousElementSibling?.tagName?.match(/^H[1-6]$/)) {
-          issues.push("Header hierarchy is broken");
-        }
+    // Process headers in document order
+    $('h1, h2, h3, h4, h5, h6').each((i: number, element: any) => {
+      const tagName = element.tagName.toLowerCase();
+      const level = parseInt(tagName.substring(1));
+      const text = $(element).text().trim();
+      const issues: string[] = [];
 
-        headers.push({
-          level,
-          text,
-          hasKeyword: false, // TODO: Implement keyword checking
-          issues
-        });
+      // Check for common issues
+      if (text.length === 0) {
+        issues.push("Empty header");
       }
-    }
+      if (text.length > 70) {
+        issues.push("Header is too long");
+      }
+      if (level === 1 && headers.filter(h => h.level === 1).length > 0) {
+        issues.push("Multiple H1 tags found");
+      }
+      if (level > 1 && level > previousLevel + 1) {
+        issues.push("Header hierarchy is broken (skipped level)");
+      }
+
+      headers.push({
+        level,
+        text,
+        hasKeyword: false, // This could be enhanced with keyword checking
+        issues
+      });
+
+      previousLevel = level;
+    });
 
     return { headers };
   } catch (error) {
