@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import * as cheerio from 'cheerio';
 
 interface HeaderTag {
   level: number;
@@ -289,16 +290,17 @@ async function processAltText(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(html);
 
     // Get all images
-    const images = Array.from(doc.getElementsByTagName('img')).map(img => {
-      const src = img.getAttribute('src') || '';
-      const alt = img.getAttribute('alt') || '';
-      const width = img.getAttribute('width') ? parseInt(img.getAttribute('width')!) : undefined;
-      const height = img.getAttribute('height') ? parseInt(img.getAttribute('height')!) : undefined;
+    const images = $('img').map((i: number, img: any) => {
+      const $img = $(img);
+      const src = $img.attr('src') || '';
+      const alt = $img.attr('alt') || '';
+      const width = $img.attr('width') ? parseInt($img.attr('width')) : undefined;
+      const height = $img.attr('height') ? parseInt($img.attr('height')) : undefined;
 
       const issues: string[] = [];
       if (!alt) issues.push("Missing alt text");
@@ -312,10 +314,10 @@ async function processAltText(url: string) {
         width,
         height,
         hasAlt: !!alt,
-        isDecorative: alt === '' && img.getAttribute('role') === 'presentation',
+        isDecorative: alt === '' && $img.attr('role') === 'presentation',
         issues
       };
-    });
+    }).get();
 
     return { images };
   } catch (error) {

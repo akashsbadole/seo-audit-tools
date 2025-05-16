@@ -35,9 +35,10 @@ export function ImageAltChecker() {
       }
 
       const data = await response.json();
-      setResults(data.images);
+      setResults(data.result?.images || []);
       toast.success("Image alt text analysis complete!");
     } catch (error) {
+      setResults([]);
       toast.error("Failed to analyze image alt text");
       console.error(error);
     }
