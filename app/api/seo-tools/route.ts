@@ -10,6 +10,24 @@ interface HeaderTag {
   issues: string[];
 }
 
+interface MobileFriendlinessResult {
+  check: {
+    score: number;
+    viewport: {
+      width: number;
+      height: number;
+      initialScale: number;
+      userScalable: boolean;
+    };
+    issues: Array<{
+      severity: 'error' | 'warning' | 'info';
+      message: string;
+      element?: string;
+    }>;
+    recommendations: string[];
+  };
+}
+
 interface InternalLink {
   url: string;
   sourceUrl: string;
@@ -171,7 +189,8 @@ type ToolResult =
   | ReadabilityResult
   | PreviewResult
   | StructuredDataResult
-  | CanonicalURLResult;
+  | CanonicalURLResult
+  | MobileFriendlinessResult;
 
 function isValidUrl(url: string): boolean {
   try {
@@ -314,6 +333,9 @@ export async function POST(request: Request) {
           break;
         case "CANONICAL_URL":
           result = await processCanonicalURL(url);
+          break;
+        case "MOBILE_FRIENDLY":
+          result = await processMobileFriendliness(url);
           break;
         default:
           return NextResponse.json(
@@ -1515,4 +1537,244 @@ function countSyllables(word: string): number {
 
   const syllables = word.match(/[aeiouy]{1,2}/g);
   return syllables ? syllables.length : 1;
+}
+
+async function processMobileFriendliness(url: string) {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const viewport = $('meta[name="viewport"]').attr('content');
+    let viewportData = {
+      width: 0,
+      height: 0,
+      initialScale: 1,
+      userScalable: true
+    };
+
+    if (viewport) {
+      const parts = viewport.split(',').map(part => part.trim());
+      parts.forEach(part => {
+        const [key, value] = part.split('=').map(s => s.trim());
+        if (key === 'width') viewportData.width = parseInt(value) || 0;
+        if (key === 'height') viewportData.height = parseInt(value) || 0;
+        if (key === 'initial-scale') viewportData.initialScale = parseFloat(value) || 1;
+        if (key === 'user-scalable') viewportData.userScalable = value !== 'no';
+      });
+    }
+
+    const issues: Array<{ severity: 'error' | 'warning' | 'info'; message: string; element?: string }> = [];
+    const recommendations: string[] = [];
+
+    // Check viewport meta tag
+    if (!viewport) {
+      issues.push({
+        severity: 'error',
+        message: 'No viewport meta tag found. This is crucial for mobile responsiveness.',
+      });
+      recommendations.push('Add a viewport meta tag with appropriate settings');
+    }
+
+    // Check for fixed width elements
+    $('*').each((_, element) => {
+      const el = $(element);
+      const width = el.css('width');
+      const tagName = el.prop('tagName')?.toLowerCase();
+      if (width && width.includes('px') && parseInt(width) > 500) {
+        issues.push({
+          severity: 'warning',
+          message: 'Element with fixed width larger than 500px detected',
+          element: tagName
+        });
+      }
+    });
+
+    // Check font sizes
+    $('*').each((_, element) => {
+      const el = $(element);
+      const fontSize = el.css('font-size');
+      const tagName = el.prop('tagName')?.toLowerCase();
+      if (fontSize && fontSize.includes('px') && parseInt(fontSize) < 12) {
+        issues.push({
+          severity: 'warning',
+          message: 'Text smaller than 12px detected',
+          element: tagName
+        });
+      }
+    });
+
+    // Check tap target spacing
+    const smallButtons = $('button, a, input[type="button"], input[type="submit"]').filter((_, element): boolean => {
+      const el = $(element);
+      const height = el.css('height');
+      const width = el.css('width');
+      const padding = el.css('padding');
+      return !!(
+        (height && parseInt(height) < 44) ||
+        (width && parseInt(width) < 44) ||
+        (padding && parseInt(padding) < 8)
+      );
+    });
+
+    if (smallButtons.length > 0) {
+      issues.push({
+        severity: 'warning',
+        message: 'Tap targets are too small (should be at least 44px height and width with adequate padding)',
+      });
+      recommendations.push('Increase the size of buttons and clickable elements to at least 44px height and width with minimum 8px padding');
+    }
+
+    // Check for horizontal scrolling issues
+    $('*').each((_, element) => {
+      const el = $(element);
+      const overflowX = el.css('overflow-x');
+      if (overflowX === 'auto' || overflowX === 'scroll') {
+        issues.push({
+          severity: 'warning',
+          message: 'Horizontal scrolling detected, which may cause poor mobile experience',
+          element: el.prop('tagName')?.toLowerCase()
+        });
+        recommendations.push('Avoid horizontal scrolling by making content responsive');
+      }
+    });
+
+    // Check for mobile-unfriendly elements
+    const unfriendlyElements = $('object, embed, frame, frameset, applet');
+    if (unfriendlyElements.length > 0) {
+      issues.push({
+        severity: 'error',
+        message: 'Mobile-unfriendly elements detected (object, embed, frame, etc.)',
+      });
+      recommendations.push('Replace deprecated elements with mobile-friendly alternatives');
+    }
+
+    // Check for proper touch targets spacing
+    $('a, button, input[type="button"], input[type="submit"]').each((_, element) => {
+      const el = $(element);
+      const margin = el.css('margin');
+      if (margin && parseInt(margin) < 8) {
+        issues.push({
+          severity: 'warning',
+          message: 'Insufficient spacing between touch targets',
+          element: el.prop('tagName')?.toLowerCase()
+        });
+      }
+    });
+
+    // Check for responsive images
+    $('img').each((_, element) => {
+      const el = $(element);
+      const srcset = el.attr('srcset');
+      const sizes = el.attr('sizes');
+      const width = el.attr('width');
+      const height = el.attr('height');
+
+      if (!srcset && !sizes) {
+        issues.push({
+          severity: 'info',
+          message: 'Image missing responsive attributes (srcset/sizes)',
+          element: 'img'
+        });
+        recommendations.push('Use srcset and sizes attributes for responsive images');
+      }
+
+      if (!width || !height) {
+        issues.push({
+          severity: 'warning',
+          message: 'Image missing width/height attributes which may cause layout shifts',
+          element: 'img'
+        });
+      }
+    });
+
+    // Check for mobile meta theme color
+    const themeColor = $('meta[name="theme-color"]').attr('content');
+    if (!themeColor) {
+      issues.push({
+        severity: 'info',
+        message: 'Missing theme-color meta tag for mobile browsers',
+      });
+      recommendations.push('Add theme-color meta tag for better mobile integration');
+    }
+
+    // Check for proper input field sizes
+    $('input[type="text"], input[type="email"], input[type="password"], input[type="number"]').each((_, element) => {
+      const el = $(element);
+      const width = el.css('width');
+      if (width && parseInt(width) < 160) {
+        issues.push({
+          severity: 'warning',
+          message: 'Input field too narrow for comfortable mobile use',
+          element: 'input'
+        });
+      }
+    });
+
+    // Check for mobile-friendly tables
+    $('table').each((_, element) => {
+      const el = $(element);
+      const overflow = el.parent().css('overflow');
+      if (!overflow || (overflow !== 'auto' && overflow !== 'scroll')) {
+        issues.push({
+          severity: 'warning',
+          message: 'Table may not be mobile-responsive',
+          element: 'table'
+        });
+        recommendations.push('Make tables responsive by wrapping them in a scrollable container or using a responsive table solution');
+      }
+    });
+
+    // Check font-family for mobile readability
+    const fontFamilies = new Set<string>();
+    $('*').each((_, element) => {
+      const el = $(element);
+      const fontFamily = el.css('font-family');
+      if (fontFamily) {
+        fontFamilies.add(fontFamily);
+      }
+    });
+
+    if (fontFamilies.size > 3) {
+      issues.push({
+        severity: 'info',
+        message: 'Too many different font families may impact mobile performance',
+      });
+      recommendations.push('Limit the number of different font families for better performance');
+    }
+
+    // Calculate score based on issues
+    let score = 100;
+    issues.forEach(issue => {
+      if (issue.severity === 'error') score -= 20;
+      if (issue.severity === 'warning') score -= 10;
+      if (issue.severity === 'info') score -= 5;
+    });
+    score = Math.max(0, score);
+
+    // Add general recommendations
+    if (!viewportData.userScalable) {
+      recommendations.push('Enable user scaling for better accessibility');
+    }
+    if (viewportData.initialScale !== 1) {
+      recommendations.push('Set initial-scale to 1 for optimal viewing');
+    }
+
+    // Add performance recommendations
+    recommendations.push('Consider implementing lazy loading for images');
+    recommendations.push('Use appropriate image formats (WebP with fallbacks)');
+    recommendations.push('Implement mobile-first CSS practices');
+
+    return {
+      check: {
+        score,
+        viewport: viewportData,
+        issues,
+        recommendations
+      }
+    };
+  } catch (error) {
+    console.error('Error processing mobile friendliness:', error);
+    throw new Error('Failed to check mobile friendliness');
+  }
 } 
