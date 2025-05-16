@@ -62,21 +62,6 @@ export async function POST(request: Request) {
       return new Response("Invalid URL", { status: 400 });
     }
 
-    // Get user's usage
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { usage: true },
-    });
-
-    if (!user) {
-      return new Response("User not found", { status: 404 });
-    }
-
-    // Check if user has exceeded their usage limit
-    if (user.usage && user.usage.toolUsageCount >= user.usage.toolUsageLimit) {
-      return new Response("Usage limit exceeded", { status: 429 });
-    }
-
     // Process the tool request
     let result;
     switch (toolType) {
@@ -122,7 +107,6 @@ export async function POST(request: Request) {
       case "CANONICAL_URL":
         result = await processCanonicalURL(url);
         break;
-      // Add other tool types here
       default:
         return NextResponse.json(
           { error: "Invalid tool type" },
@@ -130,29 +114,8 @@ export async function POST(request: Request) {
         );
     }
 
-    // Save the result
-    const toolResult = await prisma.sEOToolResult.create({
-      data: {
-        userId: user.id,
-        toolType,
-        url,
-        result,
-      },
-    });
-
-    // Update usage if not premium
-    if (!user.isPremium) {
-      await prisma.usage.update({
-        where: { userId: user.id },
-        data: {
-          freeReportsUsed: {
-            increment: 1,
-          },
-        },
-      });
-    }
-
-    return NextResponse.json(toolResult);
+    // Return the result directly without saving to database
+    return NextResponse.json({ result });
   } catch (error) {
     console.error("Error processing tool request:", error);
     return new Response("Internal server error", { status: 500 });
@@ -173,19 +136,19 @@ async function processKeywordDensity(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Remove HTML tags and convert to lowercase
     const text = html.replace(/<[^>]*>/g, ' ').toLowerCase();
-    
+
     // Split into words and remove special characters
     const words = text.split(/\W+/).filter(word => word.length > 2);
-    
+
     // Count word frequency
     const wordCount: { [key: string]: number } = {};
     words.forEach(word => {
       wordCount[word] = (wordCount[word] || 0) + 1;
     });
-    
+
     // Calculate density
     const totalWords = words.length;
     const keywords = Object.entries(wordCount)
@@ -197,7 +160,7 @@ async function processKeywordDensity(url: string) {
       .filter(item => item.count > 1) // Only include words that appear more than once
       .sort((a, b) => b.count - a.count) // Sort by frequency
       .slice(0, 20); // Get top 20 keywords
-    
+
     return { keywords };
   } catch (error) {
     console.error("Error processing keyword density:", error);
@@ -209,11 +172,11 @@ async function processHeaderTags(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get all header tags
     const headers: HeaderTag[] = [];
     for (let level = 1; level <= 6; level++) {
@@ -222,7 +185,7 @@ async function processHeaderTags(url: string) {
         const element = elements[i];
         const text = element.textContent?.trim() || '';
         const issues: string[] = [];
-        
+
         // Check for common issues
         if (text.length === 0) {
           issues.push("Empty header");
@@ -236,7 +199,7 @@ async function processHeaderTags(url: string) {
         if (level > 1 && !element.previousElementSibling?.tagName?.match(/^H[1-6]$/)) {
           issues.push("Header hierarchy is broken");
         }
-        
+
         headers.push({
           level,
           text,
@@ -245,7 +208,7 @@ async function processHeaderTags(url: string) {
         });
       }
     }
-    
+
     return { headers };
   } catch (error) {
     console.error("Error processing header tags:", error);
@@ -257,17 +220,17 @@ async function processInternalLinks(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get all links
     const links = Array.from(doc.getElementsByTagName('a')).map(link => {
       const href = link.getAttribute('href');
       const text = link.textContent?.trim() || '';
       const rel = link.getAttribute('rel') || '';
-      
+
       return {
         url: href || '',
         text,
@@ -278,7 +241,7 @@ async function processInternalLinks(url: string) {
         anchorText: text
       };
     }).filter(link => link.url); // Remove links without URLs
-    
+
     // Check each link
     const checkedLinks = await Promise.all(
       links.map(async (link) => {
@@ -299,7 +262,7 @@ async function processInternalLinks(url: string) {
         }
       })
     );
-    
+
     return { links: checkedLinks.filter((link): link is NonNullable<typeof link> => link !== null) };
   } catch (error) {
     console.error("Error processing internal links:", error);
@@ -311,24 +274,24 @@ async function processAltText(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get all images
     const images = Array.from(doc.getElementsByTagName('img')).map(img => {
       const src = img.getAttribute('src') || '';
       const alt = img.getAttribute('alt') || '';
       const width = img.getAttribute('width') ? parseInt(img.getAttribute('width')!) : undefined;
       const height = img.getAttribute('height') ? parseInt(img.getAttribute('height')!) : undefined;
-      
+
       const issues: string[] = [];
       if (!alt) issues.push("Missing alt text");
       if (alt.length < 3) issues.push("Alt text too short");
       if (alt.length > 125) issues.push("Alt text too long");
       if (!width || !height) issues.push("Missing dimensions");
-      
+
       return {
         src,
         alt,
@@ -339,7 +302,7 @@ async function processAltText(url: string) {
         issues
       };
     });
-    
+
     return { images };
   } catch (error) {
     console.error("Error processing alt text:", error);
@@ -351,16 +314,16 @@ async function processBrokenLinks(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get all links
     const links = Array.from(doc.getElementsByTagName('a')).map(link => {
       const href = link.getAttribute('href');
       const text = link.textContent?.trim() || '';
-      
+
       return {
         url: href || '',
         sourceUrl: url,
@@ -370,7 +333,7 @@ async function processBrokenLinks(url: string) {
         error: ''
       };
     }).filter(link => link.url); // Remove links without URLs
-    
+
     // Check each link
     const checkedLinks = await Promise.all(
       links.map(async (link) => {
@@ -394,10 +357,10 @@ async function processBrokenLinks(url: string) {
         }
       })
     );
-    
+
     // Filter out null values (working links)
     const brokenLinks = checkedLinks.filter((link): link is NonNullable<typeof link> => link !== null);
-    
+
     return { links: brokenLinks };
   } catch (error) {
     console.error("Error processing broken links:", error);
@@ -409,14 +372,14 @@ async function processRobotsTxt(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get robots.txt content
     const robotsTxt = doc.querySelector('pre')?.textContent || '';
-    
+
     return {
       content: robotsTxt.trim(),
     };
@@ -430,14 +393,14 @@ async function processSitemap(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get sitemap content
     const sitemap = doc.querySelector('pre')?.textContent || '';
-    
+
     return {
       content: sitemap.trim(),
     };
@@ -451,11 +414,11 @@ async function processSEOScore(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Initialize scores and issues
     const score = {
       overall: 0,
@@ -471,11 +434,11 @@ async function processSEOScore(url: string) {
         info: [] as string[]
       }
     };
-    
+
     // Technical SEO Checks
     let technicalScore = 100;
     const technicalIssues: string[] = [];
-    
+
     // Check meta tags
     const title = doc.querySelector('title')?.textContent;
     if (!title) {
@@ -485,7 +448,7 @@ async function processSEOScore(url: string) {
       technicalScore -= 10;
       technicalIssues.push("Title length is not optimal");
     }
-    
+
     const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
     if (!metaDesc) {
       technicalScore -= 20;
@@ -494,18 +457,18 @@ async function processSEOScore(url: string) {
       technicalScore -= 10;
       technicalIssues.push("Meta description length is not optimal");
     }
-    
+
     // Check canonical URL
     const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href');
     if (!canonical) {
       technicalScore -= 15;
       technicalIssues.push("Missing canonical URL");
     }
-    
+
     // Content Quality Checks
     let contentScore = 100;
     const contentIssues: string[] = [];
-    
+
     // Check headings
     const h1s = doc.getElementsByTagName('h1');
     if (h1s.length === 0) {
@@ -515,7 +478,7 @@ async function processSEOScore(url: string) {
       contentScore -= 10;
       contentIssues.push("Multiple H1 tags found");
     }
-    
+
     // Check content length
     const bodyText = doc.body.textContent || '';
     const wordCount = bodyText.trim().split(/\s+/).length;
@@ -523,11 +486,11 @@ async function processSEOScore(url: string) {
       contentScore -= 20;
       contentIssues.push("Content is too short");
     }
-    
+
     // Performance Checks
     let performanceScore = 100;
     const performanceIssues: string[] = [];
-    
+
     // Check images
     const images = doc.getElementsByTagName('img');
     for (const img of images) {
@@ -537,11 +500,11 @@ async function processSEOScore(url: string) {
         break;
       }
     }
-    
+
     // Accessibility Checks
     let accessibilityScore = 100;
     const accessibilityIssues: string[] = [];
-    
+
     // Check image alt texts
     for (const img of images) {
       if (!img.hasAttribute('alt')) {
@@ -550,29 +513,29 @@ async function processSEOScore(url: string) {
         break;
       }
     }
-    
+
     // Check ARIA labels
     const elementsWithAria = doc.querySelectorAll('[aria-label]');
     if (elementsWithAria.length === 0) {
       accessibilityScore -= 10;
       accessibilityIssues.push("No ARIA labels found");
     }
-    
+
     // Update scores
     score.categories.technical = Math.max(0, technicalScore);
     score.categories.content = Math.max(0, contentScore);
     score.categories.performance = Math.max(0, performanceScore);
     score.categories.accessibility = Math.max(0, accessibilityScore);
-    
+
     // Calculate overall score
     score.overall = Math.round(
       (score.categories.technical +
         score.categories.content +
         score.categories.performance +
         score.categories.accessibility) /
-        4
+      4
     );
-    
+
     // Categorize issues
     technicalIssues.forEach(issue => {
       if (issue.includes("Missing")) {
@@ -581,7 +544,7 @@ async function processSEOScore(url: string) {
         score.issues.warning.push(issue);
       }
     });
-    
+
     contentIssues.forEach(issue => {
       if (issue.includes("Missing")) {
         score.issues.critical.push(issue);
@@ -589,11 +552,11 @@ async function processSEOScore(url: string) {
         score.issues.warning.push(issue);
       }
     });
-    
+
     performanceIssues.forEach(issue => {
       score.issues.warning.push(issue);
     });
-    
+
     accessibilityIssues.forEach(issue => {
       if (issue.includes("Missing")) {
         score.issues.critical.push(issue);
@@ -601,14 +564,14 @@ async function processSEOScore(url: string) {
         score.issues.warning.push(issue);
       }
     });
-    
+
     // Add general suggestions
     if (score.overall < 90) {
       score.issues.info.push("Consider implementing structured data");
       score.issues.info.push("Optimize page load speed");
       score.issues.info.push("Improve mobile responsiveness");
     }
-    
+
     return { score };
   } catch (error) {
     console.error("Error processing SEO score:", error);
@@ -620,45 +583,45 @@ async function processReadability(url: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get main content
     const mainContent = doc.querySelector('main, article, .content, #content') || doc.body;
     const text = mainContent.textContent || '';
-    
+
     // Basic text statistics
     const words = text.trim().split(/\s+/);
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-    
+
     const wordCount = words.length;
     const sentenceCount = sentences.length;
     const paragraphCount = paragraphs.length;
     const averageWordsPerSentence = wordCount / sentenceCount;
-    
+
     // Calculate readability metrics
     const syllables = words.reduce((count, word) => count + countSyllables(word), 0);
-    
+
     // Flesch-Kincaid Grade Level
     const fleschKincaid = 0.39 * (wordCount / sentenceCount) + 11.8 * (syllables / wordCount) - 15.59;
-    
+
     // Gunning Fog Index
     const complexWords = words.filter(word => countSyllables(word) > 2).length;
     const gunningFog = 0.4 * ((wordCount / sentenceCount) + 100 * (complexWords / wordCount));
-    
+
     // Coleman-Liau Index
     const letters = words.join('').length;
     const colemanLiau = 0.0588 * (letters / wordCount * 100) - 0.296 * (sentenceCount / wordCount * 100) - 15.8;
-    
+
     // SMOG Index
     const smog = 1.043 * Math.sqrt(complexWords * (30 / sentenceCount)) + 3.1291;
-    
+
     // Automated Readability Index
     const automatedReadability = 4.71 * (letters / wordCount) + 0.5 * (wordCount / sentenceCount) - 21.43;
-    
+
     // Calculate overall score (0-100)
     const overall = Math.min(100, Math.max(0, 100 - (
       Math.abs(fleschKincaid - 8) * 5 + // Target grade level 8
@@ -667,26 +630,26 @@ async function processReadability(url: string) {
       Math.abs(smog - 8) * 5 + // Target grade level 8
       Math.abs(automatedReadability - 8) * 4 // Target grade level 8
     )));
-    
+
     // Generate suggestions
     const suggestions: string[] = [];
-    
+
     if (averageWordsPerSentence > 20) {
       suggestions.push("Consider breaking down long sentences into shorter ones");
     }
-    
+
     if (complexWords / wordCount > 0.2) {
       suggestions.push("Try to use simpler words where possible");
     }
-    
+
     if (paragraphCount < 3) {
       suggestions.push("Consider breaking content into more paragraphs");
     }
-    
+
     if (wordCount < 300) {
       suggestions.push("Content might be too short for comprehensive analysis");
     }
-    
+
     return {
       score: {
         overall,
@@ -714,22 +677,22 @@ async function processTitlePreview(url: string, customTitle?: string) {
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get title
     const title = customTitle || doc.querySelector('title')?.textContent || '';
     const length = title.length;
-    
+
     // Generate previews
     const desktopPreview = length > 60 ? title.substring(0, 60) + '...' : title;
     const mobilePreview = length > 40 ? title.substring(0, 40) + '...' : title;
-    
+
     // Check for issues
     const issues: string[] = [];
-    
+
     if (length === 0) {
       issues.push("Title tag is empty");
     } else if (length < 30) {
@@ -737,23 +700,23 @@ async function processTitlePreview(url: string, customTitle?: string) {
     } else if (length > 60) {
       issues.push("Title is too long (recommended: 30-60 characters)");
     }
-    
+
     if (!title.includes(' ')) {
       issues.push("Title should contain multiple words");
     }
-    
+
     if (title === title.toUpperCase()) {
       issues.push("Avoid using all caps in title");
     }
-    
+
     if (title.includes('|') || title.includes('>>') || title.includes('<<')) {
       issues.push("Avoid using special characters as separators");
     }
-    
+
     if (title.startsWith('Welcome to') || title.startsWith('Home')) {
       issues.push("Avoid generic title beginnings");
     }
-    
+
     return {
       preview: {
         title,
@@ -775,22 +738,22 @@ async function processDescriptionPreview(url: string, customDescription?: string
   try {
     const response = await fetch(url);
     const html = await response.text();
-    
+
     // Create a DOM parser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Get description
     const description = customDescription || doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
     const length = description.length;
-    
+
     // Generate previews
     const desktopPreview = length > 160 ? description.substring(0, 160) + '...' : description;
     const mobilePreview = length > 120 ? description.substring(0, 120) + '...' : description;
-    
+
     // Check for issues
     const issues: string[] = [];
-    
+
     if (length === 0) {
       issues.push("Meta description is empty");
     } else if (length < 50) {
@@ -798,23 +761,23 @@ async function processDescriptionPreview(url: string, customDescription?: string
     } else if (length > 160) {
       issues.push("Description is too long (recommended: 50-160 characters)");
     }
-    
+
     if (!description.includes(' ')) {
       issues.push("Description should contain multiple words");
     }
-    
+
     if (description === description.toUpperCase()) {
       issues.push("Avoid using all caps in description");
     }
-    
+
     if (description.includes('Click here') || description.includes('Read more')) {
       issues.push("Avoid using generic call-to-action phrases");
     }
-    
+
     if (description.includes('...') || description.includes('>>')) {
       issues.push("Avoid using ellipsis or special characters");
     }
-    
+
     // Check for keyword stuffing
     const words = description.toLowerCase().split(/\s+/);
     const wordFrequency: { [key: string]: number } = {};
@@ -823,13 +786,13 @@ async function processDescriptionPreview(url: string, customDescription?: string
         wordFrequency[word] = (wordFrequency[word] || 0) + 1;
       }
     });
-    
+
     Object.entries(wordFrequency).forEach(([word, count]) => {
       if (count > 3) {
         issues.push(`Possible keyword stuffing: "${word}" appears ${count} times`);
       }
     });
-    
+
     return {
       preview: {
         description,
@@ -856,7 +819,7 @@ async function processStructuredData(url: string, customJson?: string) {
 
     // Get all script tags with type="application/ld+json"
     const jsonLdScripts = Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
-    
+
     let jsonData;
     if (customJson) {
       try {
@@ -1026,10 +989,10 @@ async function processCanonicalURL(url: string) {
 function countSyllables(word: string): number {
   word = word.toLowerCase();
   if (word.length <= 3) return 1;
-  
+
   word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
   word = word.replace('^y', '');
-  
+
   const syllables = word.match(/[aeiouy]{1,2}/g);
   return syllables ? syllables.length : 1;
 } 
