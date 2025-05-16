@@ -331,14 +331,13 @@ async function processBrokenLinks(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const $ = cheerio.load(html);
 
     // Get all links
-    const links = Array.from(doc.getElementsByTagName('a')).map(link => {
-      const href = link.getAttribute('href');
-      const text = link.textContent?.trim() || '';
+    const links = $('a').map((_, element) => {
+      const $link = $(element);
+      const href = $link.attr('href');
+      const text = $link.text().trim();
 
       return {
         url: href || '',
@@ -348,14 +347,18 @@ async function processBrokenLinks(url: string) {
         statusCode: 0,
         error: ''
       };
-    }).filter(link => link.url); // Remove links without URLs
+    }).get().filter(link => link.url); // Remove links without URLs
 
     // Check each link
     const checkedLinks = await Promise.all(
       links.map(async (link) => {
         if (!link.url) return null;
         try {
-          const response = await fetch(link.url);
+          const fullUrl = link.url.startsWith('/')
+            ? new URL(link.url, url).toString()
+            : link.url;
+
+          const response = await fetch(fullUrl);
           if (!response.ok) {
             return {
               ...link,

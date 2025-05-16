@@ -22,6 +22,7 @@ export function BrokenLinkFinder() {
     try {
       setIsScanning(true);
       setProgress(0);
+      setResults([]);
 
       const response = await fetch("/api/seo-tools", {
         method: "POST",
@@ -39,11 +40,12 @@ export function BrokenLinkFinder() {
       }
 
       const data = await response.json();
-      setResults(data.links);
+      setResults(data.result?.links || []);
       toast.success("Broken links scan complete!");
     } catch (error) {
       toast.error("Failed to scan for broken links");
       console.error(error);
+      setResults([]);
     } finally {
       setIsScanning(false);
       setProgress(100);
