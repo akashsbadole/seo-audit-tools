@@ -728,9 +728,8 @@ async function processSEOScore(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const $ = cheerio.load(html);
 
     // Initialize scores and issues
     const score = {
@@ -753,7 +752,7 @@ async function processSEOScore(url: string) {
     const technicalIssues: string[] = [];
 
     // Check meta tags
-    const title = doc.querySelector('title')?.textContent;
+    const title = $('title').text();
     if (!title) {
       technicalScore -= 20;
       technicalIssues.push("Missing title tag");
@@ -762,7 +761,7 @@ async function processSEOScore(url: string) {
       technicalIssues.push("Title length is not optimal");
     }
 
-    const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content');
+    const metaDesc = $('meta[name="description"]').attr('content');
     if (!metaDesc) {
       technicalScore -= 20;
       technicalIssues.push("Missing meta description");
@@ -772,7 +771,7 @@ async function processSEOScore(url: string) {
     }
 
     // Check canonical URL
-    const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href');
+    const canonical = $('link[rel="canonical"]').attr('href');
     if (!canonical) {
       technicalScore -= 15;
       technicalIssues.push("Missing canonical URL");
@@ -783,7 +782,7 @@ async function processSEOScore(url: string) {
     const contentIssues: string[] = [];
 
     // Check headings
-    const h1s = doc.getElementsByTagName('h1');
+    const h1s = $('h1');
     if (h1s.length === 0) {
       contentScore -= 20;
       contentIssues.push("Missing H1 tag");
@@ -793,7 +792,7 @@ async function processSEOScore(url: string) {
     }
 
     // Check content length
-    const bodyText = doc.body.textContent || '';
+    const bodyText = $('body').text();
     const wordCount = bodyText.trim().split(/\s+/).length;
     if (wordCount < 300) {
       contentScore -= 20;
@@ -805,30 +804,30 @@ async function processSEOScore(url: string) {
     const performanceIssues: string[] = [];
 
     // Check images
-    const images = doc.getElementsByTagName('img');
-    for (const img of images) {
-      if (!img.hasAttribute('width') || !img.hasAttribute('height')) {
+    const images = $('img');
+    images.each((_, img) => {
+      if (!$(img).attr('width') || !$(img).attr('height')) {
         performanceScore -= 5;
         performanceIssues.push("Images missing dimensions");
-        break;
+        return false; // break the loop after first occurrence
       }
-    }
+    });
 
     // Accessibility Checks
     let accessibilityScore = 100;
     const accessibilityIssues: string[] = [];
 
     // Check image alt texts
-    for (const img of images) {
-      if (!img.hasAttribute('alt')) {
+    images.each((_, img) => {
+      if (!$(img).attr('alt')) {
         accessibilityScore -= 10;
         accessibilityIssues.push("Images missing alt text");
-        break;
+        return false; // break the loop after first occurrence
       }
-    }
+    });
 
     // Check ARIA labels
-    const elementsWithAria = doc.querySelectorAll('[aria-label]');
+    const elementsWithAria = $('[aria-label]');
     if (elementsWithAria.length === 0) {
       accessibilityScore -= 10;
       accessibilityIssues.push("No ARIA labels found");
@@ -897,13 +896,14 @@ async function processReadability(url: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const $ = cheerio.load(html);
 
     // Get main content
-    const mainContent = doc.querySelector('main, article, .content, #content') || doc.body;
-    const text = mainContent.textContent || '';
+    const mainContent = $('main, article, .content, #content').first().length ?
+      $('main, article, .content, #content').first() :
+      $('body');
+    const text = mainContent.text();
 
     // Basic text statistics
     const words = text.trim().split(/\s+/);
