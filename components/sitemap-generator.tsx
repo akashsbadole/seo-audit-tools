@@ -28,9 +28,10 @@ export function SitemapGenerator() {
     customPaths: [],
   });
 
-  const [generatedContent, setGeneratedContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateSitemap = async (url: string) => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/seo-tools", {
         method: "POST",
@@ -44,16 +45,37 @@ export function SitemapGenerator() {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to generate sitemap");
+        throw new Error(data.error || "Failed to generate sitemap");
       }
 
-      const data = await response.json();
-      setGeneratedContent(data.content);
-      toast.success("Sitemap generated successfully!");
+      if (data.result?.content) {
+        // Create blob and download link
+        const blob = new Blob([data.result.content], { type: 'application/xml' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'sitemap.xml';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+        toast.success(
+          data.result.source === 'existing_sitemap' 
+            ? "Found and downloaded existing sitemap!" 
+            : `Generated and downloaded sitemap with ${data.result.urlCount} URLs`
+        );
+      } else {
+        throw new Error("No sitemap content received");
+      }
     } catch (error) {
-      toast.error("Failed to generate sitemap");
-      console.error(error);
+      console.error("Sitemap generation error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to generate sitemap");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -92,9 +114,10 @@ export function SitemapGenerator() {
   return (
     <SEOToolBase
       title="Sitemap Generator"
-      description="Generate an XML sitemap for your website"
+      description="Generate and download an XML sitemap for your website"
       toolType="SITEMAP"
       onSubmit={generateSitemap}
+      isLoading={isLoading}
     >
       <div className="mt-8 space-y-6">
         <div>
@@ -183,29 +206,6 @@ export function SitemapGenerator() {
             </Button>
           </div>
         </div>
-
-        {generatedContent && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Generated Sitemap</h3>
-            <div className="relative">
-              <Textarea
-                value={generatedContent}
-                readOnly
-                className="font-mono h-64"
-              />
-              <Button
-                variant="outline"
-                className="absolute top-2 right-2"
-                onClick={() => {
-                  navigator.clipboard.writeText(generatedContent);
-                  toast.success("Copied to clipboard!");
-                }}
-              >
-                Copy
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </SEOToolBase>
   );

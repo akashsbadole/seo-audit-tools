@@ -29,6 +29,37 @@ function isValidUrl(url: string): boolean {
   }
 }
 
+// Rate limiting and retry configuration
+const RATE_LIMIT_DELAY = 1000; // 1 second delay between requests
+const MAX_RETRIES = 3; // Maximum number of retries per URL
+const RETRY_DELAY = 2000; // 2 seconds delay between retries
+
+async function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  try {
+    const response = await fetch(url);
+    if (response.status === 429) { // Too Many Requests
+      if (retries > 0) {
+        console.log(`Rate limited, retrying in ${RETRY_DELAY}ms... (${retries} retries left)`);
+        await delay(RETRY_DELAY);
+        return fetchWithRetry(url, retries - 1);
+      }
+      throw new Error('Rate limit exceeded after all retries');
+    }
+    return response;
+  } catch (error) {
+    if (retries > 0) {
+      console.log(`Failed to fetch, retrying in ${RETRY_DELAY}ms... (${retries} retries left)`);
+      await delay(RETRY_DELAY);
+      return fetchWithRetry(url, retries - 1);
+    }
+    throw error;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { toolType, url, customTitle, customDescription, customJson } = await request.json();
@@ -409,23 +440,117 @@ async function processRobotsTxt(url: string) {
 }
 
 async function processSitemap(url: string) {
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 2000;
+
+  async function fetchWithBasicRetry(url: string): Promise<Response> {
+    let lastError;
+    for (let i = 0; i < MAX_RETRIES; i++) {
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; SEOAuditBot/1.0; +http://localhost)'
+          }
+        });
+
+        // If we get a success response or an error that's not rate limiting, return it
+        if (response.ok || response.status !== 429) {
+          return response;
+        }
+
+        // If we get rate limited, wait before retrying
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+        continue;
+      } catch (error) {
+        lastError = error;
+        // Only retry on network errors
+        if (error instanceof TypeError) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw lastError || new Error('Failed to fetch after retries');
+  }
+
   try {
-    const response = await fetch(url);
+    // First try to fetch sitemap.xml directly
+    try {
+      const sitemapUrl = new URL('/sitemap.xml', url).href;
+      const response = await fetchWithBasicRetry(sitemapUrl);
+      if (response.ok) {
+        const sitemap = await response.text();
+        return {
+          content: sitemap,
+          source: 'existing_sitemap'
+        };
+      }
+    } catch (error) {
+      console.log('No existing sitemap.xml found, generating basic one');
+    }
+
+    // If no sitemap.xml exists, generate a basic one from the current page
+    const response = await fetchWithBasicRetry(url);
+    if (!response.ok) {
+      throw new Error(
+        response.status === 429
+          ? "Website is rate limiting requests. Please try again later."
+          : `Failed to access website: ${response.status} ${response.statusText}`
+      );
+    }
+
     const html = await response.text();
+    const $ = cheerio.load(html);
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Get all unique internal links without verification
+    const urls = new Set<string>();
+    urls.add(url); // Add the main URL
 
-    // Get sitemap content
-    const sitemap = doc.querySelector('pre')?.textContent || '';
+    // Collect all links without verifying them
+    $('a').each((_, element) => {
+      const href = $(element).attr('href');
+      if (!href) return;
+
+      try {
+        // Handle relative and absolute URLs
+        const absoluteUrl = href.startsWith('http') ? href : new URL(href, url).href;
+        const urlObj = new URL(absoluteUrl);
+
+        // Only include URLs from the same domain
+        if (urlObj.hostname === new URL(url).hostname) {
+          urls.add(absoluteUrl);
+        }
+      } catch (error) {
+        // Skip invalid URLs
+        console.log(`Skipping invalid URL: ${href}`);
+      }
+    });
+
+    // Generate XML sitemap
+    let sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    sitemap += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    urls.forEach(pageUrl => {
+      sitemap += '  <url>\n';
+      sitemap += `    <loc>${pageUrl}</loc>\n`;
+      sitemap += `    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>\n`;
+      sitemap += '    <changefreq>weekly</changefreq>\n';
+      sitemap += '    <priority>0.8</priority>\n';
+      sitemap += '  </url>\n';
+    });
+
+    sitemap += '</urlset>';
 
     return {
-      content: sitemap.trim(),
+      content: sitemap,
+      source: 'generated',
+      urlCount: urls.size
     };
   } catch (error) {
     console.error("Error processing sitemap:", error);
-    throw new Error("Failed to generate sitemap");
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to generate sitemap: ${errorMessage}`);
   }
 }
 
