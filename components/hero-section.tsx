@@ -60,11 +60,7 @@ export function HeroSection() {
               </SignUpButton>
             </div>
           )}
-          {isSignedIn && (
-            <div className="mt-8 flex items-center justify-center">
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          )}
+         
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link href="/keyword-research" className="group">

@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
-import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignUpButton, UserButton, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   const handleScroll = (
@@ -83,7 +84,7 @@ const Header = () => {
             <li>
               <Link
                 href="/"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={(e) => {
                   setIsOpen(false);
                 }}
@@ -94,7 +95,7 @@ const Header = () => {
             <li>
               <Link
                 href="/keyword-research"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={() => setIsOpen(false)}
               >
                 Keyword Research Tool
@@ -103,7 +104,7 @@ const Header = () => {
             <li>
               <Link
                 href="/meta-tags-generator"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={() => setIsOpen(false)}
               >
                 Meta Tags Generator
@@ -112,7 +113,7 @@ const Header = () => {
             <li>
               <Link
                 href="/open-graph-generator"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={() => setIsOpen(false)}
               >
                 Open Graph Generator
@@ -121,7 +122,7 @@ const Header = () => {
             <li>
               <Link
                 href="/campaign-url-builder"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={() => setIsOpen(false)}
               >
                 Campaign URL Builder
@@ -130,7 +131,7 @@ const Header = () => {
             <li>
               <a
                 href="#about"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={(e) => handleScroll(e, "about")}
               >
                 About
@@ -139,7 +140,7 @@ const Header = () => {
             <li>
               <a
                 href="#contact"
-                className="block text-indigo-200 hover:text-white transition-colors text-[14px]"
+                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
                 onClick={(e) => handleScroll(e, "contact")}
               >
                 Contact
@@ -149,7 +150,7 @@ const Header = () => {
               <>
                 <li>
                   <SignInButton mode="modal">
-                    <button className="block text-indigo-200 hover:text-white transition-colors text-[14px] bg-transparent border border-indigo-200 px-4 py-1 rounded-md hover:bg-indigo-200 hover:text-indigo-900">
+                    <button className="block text-indigo-200 hover:text-white transition-colors text-[13px] bg-transparent border border-indigo-200 px-4 py-1 rounded-md hover:bg-indigo-200 hover:text-indigo-900">
                       Login
                     </button>
                   </SignInButton>
@@ -167,11 +168,19 @@ const Header = () => {
                 <li>
                   <Link
                     href="/dashboard"
-                    className="block text-indigo-200 hover:text-white transition-colors text-[14px] mr-4"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
                     onClick={() => setIsOpen(false)}
                   >
                     Dashboard
                   </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={() => signOut()}
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
+                  >
+                    Logout
+                  </button>
                 </li>
                 <li>
                   <UserButton afterSignOutUrl="/" />
