@@ -991,12 +991,11 @@ async function processTitlePreview(url: string, customTitle?: string) {
     const response = await fetch(url);
     const html = await response.text();
 
-    // Create a DOM parser
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    // Use cheerio instead of DOMParser
+    const $ = cheerio.load(html);
 
     // Get title
-    const title = customTitle || doc.querySelector('title')?.textContent || '';
+    const title = customTitle || $('title').text() || '';
     const length = title.length;
 
     // Generate previews
