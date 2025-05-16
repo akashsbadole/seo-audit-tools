@@ -27,7 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 import { KeywordTracking } from "@/components/keyword-tracking";
 import { CompetitorAnalysis } from "@/components/competitor-analysis";
@@ -35,6 +35,7 @@ import { TechnicalSEO } from "@/components/technical-seo";
 import { AuditHistory } from "@/components/audit-history";
 import { SEOToolsDashboard } from "@/components/seo-tools-dashboard";
 import { ContactForm } from "@/components/contact-form";
+import { toast } from "@/components/ui/use-toast";
 
 interface KeywordSearch {
   id: number;
@@ -56,44 +57,76 @@ interface DomainAudit {
 
 export default function DashboardPage() {
   const { userId } = useAuth();
-  const [user, setUser] = useState<any>(null);
+  const { user } = useUser();
+  const [dbUser, setDbUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!userId) {
+    if (!userId || !user) {
       router.push("/sign-in");
       return;
     }
 
     const fetchUser = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch(`/api/users/${userId}`);
-        const data = await response.json();
-
-        if (!data) {
-          // Create user if not exists
-          const createResponse = await fetch("/api/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userId }),
-          });
-          const newUser = await createResponse.json();
-          setUser(newUser);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            // Create user if not exists
+            const createResponse = await fetch("/api/users", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ 
+                userId,
+                email: user.emailAddresses[0]?.emailAddress 
+              }),
+            });
+            
+            if (!createResponse.ok) {
+              throw new Error('Failed to create user');
+            }
+            
+            const newUser = await createResponse.json();
+            setDbUser(newUser);
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         } else {
-          setUser(data);
+          const data = await response.json();
+          setDbUser(data);
         }
       } catch (error) {
         console.error("Error fetching user:", error);
+        toast({
+          title: "Error",
+          description: "There was a problem connecting to the database. Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUser();
-  }, [userId, router]);
+  }, [userId, user, router]);
 
-  if (!userId) {
+  if (!userId || !user) {
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
