@@ -3,10 +3,10 @@ import * as cheerio from "cheerio"
 import type { SEOAuditResult } from "@/types/seo-audit"
 import { searchAndStoreDomain, updateDomainReport } from '@/lib/db'
 import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import dns from 'dns'
 import { promisify } from 'util'
+import { auth } from "@clerk/nextjs/server"
+import https from 'https'
 
 const lookup = promisify(dns.lookup)
 
@@ -107,7 +107,7 @@ function mockDuplicateContentCheck(domain: string, $: cheerio.CheerioAPI) {
 function mockKeywordOptimizationCheck(domain: string, $: cheerio.CheerioAPI) {
   // Extract keywords from meta tags
   const metaKeywords = $('meta[name="keywords"]').attr('content')?.split(',').map(k => k.trim()) || []
-  
+
   // Extract domain keywords
   const domainKeywords = $('title').text().toLowerCase().split(/\s+/)
     .concat($('meta[name="description"]').attr('content')?.toLowerCase().split(/\s+/) || [])
@@ -155,9 +155,9 @@ function mockKeywordOptimizationCheck(domain: string, $: cheerio.CheerioAPI) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 20)
 
-  const status: "good" | "warning" | "error" = 
+  const status: "good" | "warning" | "error" =
     allKeywords.length >= 10 ? "good" :
-    allKeywords.length >= 5 ? "warning" : "error"
+      allKeywords.length >= 5 ? "warning" : "error"
 
   return {
     status,
@@ -204,7 +204,7 @@ function mockContentQualityCheck($: cheerio.CheerioAPI) {
 function mockKeywordDensityCheck($: cheerio.CheerioAPI) {
   // Get all text content from the page
   const content = $('body').text()
-  
+
   // Helper function to decode encoded characters
   const decodeString = (str: string) => {
     try {
@@ -260,9 +260,9 @@ function mockKeywordDensityCheck($: cheerio.CheerioAPI) {
       density: `${((count / words.length) * 100).toFixed(1)}%`
     }))
 
-  const status: "good" | "warning" | "error" = 
+  const status: "good" | "warning" | "error" =
     keywords.length >= 10 ? "good" :
-    keywords.length >= 5 ? "warning" : "error"
+      keywords.length >= 5 ? "warning" : "error"
 
   return {
     status,
@@ -515,7 +515,7 @@ function mockJavaScriptSEOCheck($: cheerio.CheerioAPI) {
 
 function mockCompetitiveAnalysisCheck(domain: string, $: cheerio.CheerioAPI) {
   const status: "good" | "warning" | "error" = "good"
-  
+
   const backlinksComparison: AuditResult = {
     status,
     value: "N/A",
@@ -584,151 +584,159 @@ const requestCounts = new Map<string, { count: number; timestamp: number }>();
 const WINDOW_SIZE = 60 * 1000; // 1 minute window
 const MAX_REQUESTS = 10; // Allow 10 requests per minute per URL
 
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session?.user?.email) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    )
-  }
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+  'Mozilla/5.0 (compatible; SEOAuditBot/1.0; +http://localhost)'
+];
 
-  const usageCheck = await checkUsageLimit('report')
-  if (!usageCheck.allowed) {
-    return NextResponse.json(
-      { error: usageCheck.message },
-      { status: 403 }
-    )
-  }
+async function fetchWithFallback(url: string): Promise<{ html: string; finalUrl: string }> {
+  const errors: Error[] = [];
 
-  const url = request.nextUrl.searchParams.get('url')
-  if (!url) {
-    return NextResponse.json(
-      { error: 'URL parameter is required' },
-      { status: 400 }
-    )
-  }
-
-  try {
-    // Validate URL format
+  // Try different user agents
+  for (const userAgent of USER_AGENTS) {
     try {
-      new URL(url)
-    } catch (e) {
-      console.error('Invalid URL format:', url)
-      return NextResponse.json(
-        { error: 'Invalid URL format' },
-        { status: 400 }
-      )
-    }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const domain = new URL(url).hostname
-    console.log('Processing audit for domain:', domain)
-
-    // Fetch and parse the webpage
-    let response
-    try {
-      console.log('Fetching URL:', url)
-      response = await fetch(url, {
+      const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; SEOAuditBot/1.0)',
+          'User-Agent': userAgent,
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'DNT': '1',
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1'
         },
-        signal: AbortSignal.timeout(10000), // 10 second timeout
-      })
-      console.log('Fetch response status:', response.status)
-    } catch (e) {
-      console.error('Error fetching URL:', e)
+        signal: controller.signal,
+        redirect: 'follow',
+        next: { revalidate: 0 }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.toLowerCase().includes('text/html')) {
+        throw new Error('URL does not return HTML content');
+      }
+
+      const html = await response.text();
+      if (!html || html.length < 100) { // Basic check for valid HTML
+        throw new Error('Invalid or empty HTML response');
+      }
+
+      return { html, finalUrl: response.url };
+    } catch (error) {
+      errors.push(error as Error);
+      console.warn(`Failed to fetch with user agent ${userAgent}:`, error);
+      continue;
+    }
+  }
+
+  // If all attempts failed, throw the last error
+  throw new Error(`All fetch attempts failed. Last error: ${errors[errors.length - 1]?.message}`);
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get the URL parameter
+    const url = request.nextUrl.searchParams.get("url");
+
+    if (!url) {
       return NextResponse.json(
-        { error: 'Failed to fetch the webpage. Please check if the URL is accessible.' },
-        { status: 500 }
-      )
+        { error: "URL parameter is required" },
+        { status: 400 }
+      );
     }
 
-    if (!response.ok) {
-      console.error('Fetch failed with status:', response.status)
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch {
       return NextResponse.json(
-        { error: `Failed to fetch the webpage. Status: ${response.status}` },
-        { status: response.status }
-      )
+        { error: "Invalid URL format" },
+        { status: 400 }
+      );
     }
 
-    let html
+    // Rate limiting check
+    const currentTime = Date.now();
+    const urlKey = url.toLowerCase();
+    const requestRecord = requestCounts.get(urlKey);
+
+    if (requestRecord && currentTime - requestRecord.timestamp < WINDOW_SIZE) {
+      if (requestRecord.count >= MAX_REQUESTS) {
+        return NextResponse.json(
+          { error: "Rate limit exceeded. Please try again later." },
+          { status: 429 }
+        );
+      }
+      requestRecord.count++;
+    } else {
+      requestCounts.set(urlKey, { count: 1, timestamp: currentTime });
+    }
+
+    // Extract domain from URL
+    let domain = url.replace(/^https?:\/\//, '');
+    domain = domain.split('/')[0];
+
+    // Optional: Get user session if they're logged in
+    const { userId } = await auth();
+
     try {
-      html = await response.text()
-      console.log('Successfully fetched HTML content')
-    } catch (e) {
-      console.error('Error reading response text:', e)
-      return NextResponse.json(
-        { error: 'Failed to read webpage content' },
-        { status: 500 }
-      )
+      // Try to fetch the page with fallback mechanisms
+      const { html, finalUrl } = await fetchWithFallback(url);
+      const $ = cheerio.load(html);
+
+      // Perform SEO audit
+      const auditResult = performSEOAudit($, finalUrl || url, domain);
+
+      // If user is logged in, store their audit history
+      if (userId) {
+        try {
+          // Store domain in database
+          const domainRecord = await searchAndStoreDomain(domain, userId);
+
+          // Get IP address
+          const dnsResult = await lookup(domain);
+          const ipAddress = dnsResult.address;
+
+          // Update domain with IP address
+          await updateDomainReport(domain, {
+            ipAddress,
+            userId
+          });
+        } catch (err) {
+          console.error('Error storing audit history:', err);
+          // Continue with the audit even if storage fails
+        }
+      }
+
+      return NextResponse.json(auditResult);
+    } catch (error) {
+      console.warn('Failed to fetch site, generating mock audit:', error);
+      // Generate mock audit result if we can't fetch the site
+      const mockResult = generateMockAuditResult(url, domain);
+      return NextResponse.json(mockResult);
     }
-
-    let $
-    try {
-      $ = cheerio.load(html)
-      console.log('Successfully parsed HTML with cheerio')
-    } catch (e) {
-      console.error('Error parsing HTML with cheerio:', e)
-      return NextResponse.json(
-        { error: 'Failed to parse webpage content' },
-        { status: 500 }
-      )
-    }
-
-    // Get IP address
-    let ipAddress
-    try {
-      const { address } = await lookup(domain)
-      ipAddress = address
-      console.log('Successfully resolved IP address:', ipAddress)
-    } catch (e) {
-      console.error('Error looking up IP:', e)
-      // Continue without IP address
-    }
-
-    // Store domain info
-    try {
-      console.log('Storing domain info for:', domain)
-      await searchAndStoreDomain(domain)
-      console.log('Successfully stored domain info')
-    } catch (e) {
-      console.error('Error storing domain:', e)
-      // Continue without storing domain info
-    }
-
-    // Perform SEO audit
-    console.log('Starting SEO audit')
-    const auditResult = performSEOAudit($, url, domain)
-    console.log('Completed SEO audit')
-
-    // Update domain with report data
-    try {
-      console.log('Updating domain report')
-      await updateDomainReport(domain, {
-        ipAddress,
-        reportData: new TextEncoder().encode(JSON.stringify(auditResult)),
-      })
-      console.log('Successfully updated domain report')
-    } catch (e) {
-      console.error('Error updating domain report:', e)
-      // Continue without updating report
-    }
-
-    // After successful audit, increment usage
-    await incrementUsage('report', parseInt(session.user.id))
-
-    return NextResponse.json(auditResult)
   } catch (error) {
-    console.error('Error performing SEO audit:', error)
+    console.error("Error performing SEO audit:", error);
     return NextResponse.json(
-      { error: 'Failed to perform SEO audit' },
+      { error: "Failed to perform SEO audit" },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -746,7 +754,7 @@ function generateMockAuditResult(url: string, domain: string): SEOAuditResult {
       </body>
     </html>
   `)
-  
+
   return performSEOAudit($, url, domain)
 }
 
@@ -854,11 +862,11 @@ function performSEOAudit($: cheerio.CheerioAPI, url: string, domain: string): SE
   // Calculate overall score
   const overallScore = Math.round(
     onPageScore * 0.2 +
-      technicalScore * 0.25 +
-      contentScore * 0.2 +
-      performanceScore * 0.15 +
-      advancedSEOScore * 0.1 +
-      competitiveScore * 0.1,
+    technicalScore * 0.25 +
+    contentScore * 0.2 +
+    performanceScore * 0.15 +
+    advancedSEOScore * 0.1 +
+    competitiveScore * 0.1,
   )
 
   return {
@@ -949,7 +957,7 @@ function checkMetaTitle($: cheerio.CheerioAPI) {
   }
 
   const status: "error" | "warning" | "good" = issues.length ? (issues.length > 1 ? "error" : "warning") : "good"
-  
+
   return {
     status,
     value: metaTitle,
@@ -1034,10 +1042,10 @@ function checkHeadings($: cheerio.CheerioAPI) {
   if (!issues.length) {
     recommendations.push("Your heading structure follows SEO best practices")
   }
-  const status: "error" | "warning" | "good" = issues.length 
-    ? (issues.length > 1 ? "error" : "warning") 
+  const status: "error" | "warning" | "good" = issues.length
+    ? (issues.length > 1 ? "error" : "warning")
     : "good";
-    
+
   return {
     status,
     h1Count,
@@ -1060,7 +1068,7 @@ function checkImageAlt($: cheerio.CheerioAPI) {
     const $img = $(img)
     const src = $img.attr("src") || ""
     const alt = $img.attr("alt") || ""
-    
+
     if (alt) {
       imagesWithAlt++
     }
@@ -1086,11 +1094,11 @@ function checkImageAlt($: cheerio.CheerioAPI) {
     recommendations.push("All images have alt attributes - great job!")
   }
 
-  const status: "error" | "warning" | "good" = 
-    missingAltCount > 0 
-      ? (missingAltCount === totalImages ? "error" : "warning") 
+  const status: "error" | "warning" | "good" =
+    missingAltCount > 0
+      ? (missingAltCount === totalImages ? "error" : "warning")
       : "good";
-      
+
   return {
     status,
     total: totalImages,
@@ -1134,9 +1142,9 @@ function checkUrlStructure(url: string) {
   if (!issues.length) {
     recommendations.push("Your URL structure follows SEO best practices")
   }
-  const status: "error" | "warning" | "good" = 
-    issues.length 
-      ? (issues.length > 1 ? "error" : "warning") 
+  const status: "error" | "warning" | "good" =
+    issues.length
+      ? (issues.length > 1 ? "error" : "warning")
       : "good";
 
   return {
@@ -1183,9 +1191,9 @@ function checkInternalLinks($: cheerio.CheerioAPI, url: string) {
   if (!issues.length) {
     recommendations.push("Your internal linking structure is good")
   }
-  const status: "error" | "warning" | "good" = 
-    issues.length 
-      ? (issues.length > 1 ? "error" : "warning") 
+  const status: "error" | "warning" | "good" =
+    issues.length
+      ? (issues.length > 1 ? "error" : "warning")
       : "good";
 
   return {

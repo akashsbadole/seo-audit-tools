@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  output        = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -12,57 +13,219 @@ datasource db {
 }
 
 model User {
-  id            Int         @id @default(autoincrement())
-  email         String      @unique
-  name          String?
-  isPremium     Boolean     @default(false)
-  usage         UserUsage?
-  domains       Domain[]    // Add relation to Domain model
-  keywordSearches KeywordSearch[]  // Add relation to KeywordSearch model
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String    @unique
+  isPremium     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  usage         Usage?
+  audits        Audit[]
+  keywords      Keyword[]
+  competitors   Competitor[]
+  goals         Goal[]
+  notifications Notification[]
+  contactRequests ContactRequest[]
 }
 
-model UserUsage {
-  id            Int         @id @default(autoincrement())
-  userId        Int         @unique
-  user          User        @relation(fields: [userId], references: [id])
-  freeReportsUsed Int       @default(0)
-  freeSearchesUsed Int      @default(0)
-  lastResetDate DateTime    @default(now())
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+model Usage {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  freeReportsUsed Int      @default(0)
+  freeSearchesUsed Int     @default(0)
+  lastReset       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model Domain {
-  id          Int     @id @default(autoincrement())
-  domainName  String   @unique
-  ipAddress   String?
-  pdfData     Bytes?   // For storing PDF as blob
-  pdfPath     String?  // For storing PDF file path
-  userId      Int?
-  user        User?    @relation(fields: [userId], references: [id])
+model Audit {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url         String
+  type        AuditType
+  score       Int
+  status      AuditStatus
+  issues      Issue[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pdfPath     String?
+  recommendations Recommendation[]
+}
+
+model Issue {
+  id          String   @id @default(cuid())
+  auditId     String
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  type        String
+  severity    Severity
+  description String
+  status      IssueStatus
+  affectedPages Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model ContactMessage {
-  id        Int      @id @default(autoincrement())
-  fullName  String
-  email     String
-  message   String   @db.Text
-  createdAt DateTime @default(now())
+model Keyword {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyword         String
+  position        Int
+  previousPosition Int
+  searchVolume    Int
+  difficulty      Int
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
-model KeywordSearch {
-  id        Int      @id @default(autoincrement())
-  keyword   String
-  platform  String
-  searchType String
-  country   String
-  language  String
-  userId    Int?
-  user      User?    @relation(fields: [userId], references: [id])
+model Competitor {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain          String
+  domainAuthority Int
+  backlinks       Int
+  organicKeywords Int
+  organicTraffic  Int
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  target      Int
+  current     Int
+  deadline    DateTime
+  status      GoalStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  message     String
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  auditId     String
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  priority    Priority
+  status      RecommendationStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ContactRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String
+  phone     String?
+  service   String
+  message   String
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
-  results   Json     // Store the keyword results as JSON
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model SEOToolResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  toolType    SEOToolType
+  url         String
+  result      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([toolType])
+}
+
+enum AuditType {
+  FULL
+  TECHNICAL
+  CONTENT
+}
+
+enum AuditStatus {
+  COMPLETED
+  IN_PROGRESS
+  FAILED
+}
+
+enum Severity {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+}
+
+enum NotificationType {
+  KEYWORD_CHANGE
+  COMPETITOR_UPDATE
+  TECHNICAL_ISSUE
+  GOAL_MILESTONE
+  AUDIT_COMPLETE
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum RecommendationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SEOToolType {
+  META_TAGS
+  KEYWORD_DENSITY
+  HEADER_TAGS
+  INTERNAL_LINKS
+  ALT_TEXT
+  BROKEN_LINKS
+  ROBOTS_TXT
+  SITEMAP
+  SEO_SCORE
+  READABILITY
+  TITLE_PREVIEW
+  DESCRIPTION_PREVIEW
+  STRUCTURED_DATA
+  CANONICAL_URL
+  MOBILE_FRIENDLY
 }

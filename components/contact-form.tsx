@@ -1,28 +1,40 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Send, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { ContactError } from "@/components/contact-error"
+"use client";
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "sonner";
+
+interface ContactFormData {
+  name: string;
+  email: string;
+  phone: string;
+  service: "digital-marketing" | "seo" | "web-development";
+  message: string;
+}
 
 export function ContactForm() {
-  const [formData, setFormData] = useState({
-    fullName: "",
+  const [formData, setFormData] = useState<ContactFormData>({
+    name: "",
     email: "",
-    message: ""
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+    phone: "",
+    service: "digital-marketing",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch("/api/contact", {
@@ -31,115 +43,130 @@ export function ContactForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-      })
-
-      const data = await response.json()
+      });
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to send message")
+        throw new Error("Failed to submit form");
       }
 
-      setSuccess(true)
-      setFormData({ fullName: "", email: "", message: "" })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      toast.success("Message sent successfully!");
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        service: "digital-marketing",
+        message: "",
+      });
+    } catch (error) {
+      toast.error("Failed to send message. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setLoading(false);
     }
-  }
-
-  const handleRetry = () => {
-    setError(null)
-    setSuccess(false)
-  }
-
-  if (success) {
-    return (
-      <div className="text-center space-y-4">
-        <h3 className="text-2xl font-bold text-green-600">Message Sent!</h3>
-        <p className="text-gray-600">Thank you for your message. We'll get back to you soon.</p>
-        <Button 
-          variant="outline" 
-          onClick={() => {
-            setSuccess(false)
-            setFormData({ fullName: "", email: "", message: "" })
-          }}
-        >
-          Send Another Message
-        </Button>
-      </div>
-    )
-  }
+  };
 
   return (
-    <div id="contact" className="container mx-auto px-4 py-12">
-      <div className="max-w-3xl mx-auto">
-        <Card className="bg-gradient-to-b from-indigo-50 to-purple-50 border-none shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center text-indigo-900">Contact Us</CardTitle>
-            <CardDescription className="text-center text-lg text-indigo-700">
-              Have questions? We'd love to hear from you.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && <ContactError error={error} onRetry={handleRetry} />}
-              
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Contact Us</CardTitle>
+        <CardDescription>
+          Get in touch with our experts for digital marketing, SEO, and web
+          development services
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-indigo-900">Full Name</Label>
+                <Label htmlFor="name">Name</Label>
                 <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  id="name"
                   placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
-                  className={`bg-white border-indigo-200 focus:border-indigo-500`}
-                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-indigo-900">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
-                  className={`bg-white border-indigo-200 focus:border-indigo-500`}
-                  disabled={isSubmitting}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="message" className="text-indigo-900">Message</Label>
-                <Textarea
-                  id="message"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  placeholder="Your message here..."
-                  required
-                  className={`bg-white border-indigo-200 focus:border-indigo-500 min-h-[150px]`}
-                  disabled={isSubmitting}
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-none"
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Service Type</Label>
+              <RadioGroup
+                value={formData.service}
+                onValueChange={(
+                  value: "digital-marketing" | "seo" | "web-development"
+                ) => setFormData({ ...formData, service: value })}
+                className="flex flex-col space-y-1"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  "Send Message"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
-} 
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="digital-marketing"
+                    id="digital-marketing"
+                  />
+                  <Label htmlFor="digital-marketing">Digital Marketing</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="seo" id="seo" />
+                  <Label htmlFor="seo">SEO Services</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem
+                    value="web-development"
+                    id="web-development"
+                  />
+                  <Label htmlFor="web-development">Web Development</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                placeholder="Tell us about your project..."
+                value={formData.message}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
+                required
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Sending..." : "Send Message"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

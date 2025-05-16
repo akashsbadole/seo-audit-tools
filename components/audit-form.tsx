@@ -60,9 +60,9 @@ export function AuditForm() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-[#111827]">
       <CardHeader>
-        <CardTitle>Website SEO Audit</CardTitle>
+        <CardTitle className="text-white">Website SEO Audit</CardTitle>
         <CardDescription>
           Enter your website URL to get a comprehensive SEO analysis
         </CardDescription>

@@ -375,7 +375,7 @@ ${
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-blue-700 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateMetaTags()}</code>
               </pre>
             </div>

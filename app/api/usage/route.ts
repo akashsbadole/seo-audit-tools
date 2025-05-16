@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { currentUser } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
+  const user = await currentUser();
   
-  if (!session?.user?.email) {
+  if (!user?.id) {
     return NextResponse.json(
       { error: 'Authentication required' },
       { status: 401 }
@@ -14,12 +13,12 @@ export async function GET() {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
       include: { usage: true }
     });
 
-    if (!user) {
+    if (!dbUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -27,9 +26,9 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      freeReportsUsed: user.usage?.freeReportsUsed || 0,
-      freeSearchesUsed: user.usage?.freeSearchesUsed || 0,
-      isPremium: user.isPremium
+      freeReportsUsed: dbUser.usage?.freeReportsUsed || 0,
+      freeSearchesUsed: dbUser.usage?.freeSearchesUsed || 0,
+      isPremium: dbUser.isPremium
     });
   } catch (error) {
     console.error('Error fetching usage:', error);

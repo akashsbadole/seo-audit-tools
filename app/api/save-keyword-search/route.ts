@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@/lib/generated/prisma';
+import { prisma } from '@/lib/prisma';
 import { verifyRecaptcha } from '@/lib/recaptcha';
 import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
-// Create a single Prisma client instance
-const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -76,12 +72,12 @@ export async function POST(request: Request) {
         country: String(country),
         language: String(language),
         results: results,
-        userId: parseInt(session.user.id)
+        userId: session.user.id
       }
     });
 
     // Increment usage after successful save
-    await incrementUsage('search', parseInt(session.user.id));
+    await incrementUsage('search', session.user.id);
 
     return NextResponse.json({
       success: true,

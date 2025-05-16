@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Specific page directives
+Disallow: /api/
+Disallow: /dashboard/
+
+# Sitemap location
+Sitemap: https://www.seoauditcheck.com/sitemap.xml
+
+# Crawl delay to prevent server overload
+Crawl-delay: 1

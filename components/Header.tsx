@@ -1,9 +1,13 @@
 "use client";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isSignedIn, user } = useUser();
+  const router = useRouter();
 
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -75,7 +79,7 @@ const Header = () => {
               : "opacity-0 -translate-y-full invisible md:visible md:opacity-100 md:translate-y-0"
           } md:block`}
         >
-          <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4 md:p-0">
+          <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4 md:p-0 items-center">
             <li>
               <Link
                 href="/"
@@ -141,6 +145,39 @@ const Header = () => {
                 Contact
               </a>
             </li>
+            {!isSignedIn ? (
+              <>
+                <li>
+                  <SignInButton mode="modal">
+                    <button className="block text-indigo-200 hover:text-white transition-colors text-[14px] bg-transparent border border-indigo-200 px-4 py-1 rounded-md hover:bg-indigo-200 hover:text-indigo-900">
+                      Login
+                    </button>
+                  </SignInButton>
+                </li>
+                <li>
+                  <SignUpButton mode="modal">
+                    <button className="block text-indigo-900 bg-indigo-200 hover:bg-white transition-colors text-[14px] px-4 py-1 rounded-md">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    href="/dashboard"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[14px] mr-4"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <UserButton afterSignOutUrl="/" />
+                </li>
+              </>
+            )}
           </ul>
         </nav>
       </div>

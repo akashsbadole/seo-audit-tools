@@ -1,144 +1,189 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useEffect, useState } from "react"
-import { AlertCircle, AlertTriangle, CheckCircle2, Download, Globe, Loader2, ExternalLink } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AuditScoreCard } from "@/components/audit-score-card"
-import { AuditSummary } from "@/components/audit-summary"
-import { SocialShare } from "@/components/social-share"
-import type { SEOAuditResult, PDFExportOptions } from "@/types/seo-audit"
+import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  Globe,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuditScoreCard } from "@/components/audit-score-card";
+import { AuditSummary } from "@/components/audit-summary";
+import { SocialShare } from "@/components/social-share";
+import type { SEOAuditResult, PDFExportOptions } from "@/types/seo-audit";
 // import { SEOMetaTags } from "@/components/seo-meta-tags"
 
 export function AuditResults({ url }: { url: string }) {
-  const [auditResult, setAuditResult] = useState<SEOAuditResult | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isExporting, setIsExporting] = useState(false)
-  const [retryTime, setRetryTime] = useState<number | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
-  const MAX_RETRIES = 3
+  const [auditResult, setAuditResult] = useState<SEOAuditResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [retryTime, setRetryTime] = useState<number | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 5000; // 5 seconds
 
   useEffect(() => {
-    let countdownInterval: NodeJS.Timeout | undefined = undefined
-    let retryTimeout: NodeJS.Timeout | undefined = undefined
+    let countdownInterval: NodeJS.Timeout | undefined = undefined;
+    let retryTimeout: NodeJS.Timeout | undefined = undefined;
 
     const fetchAuditResults = async () => {
       if (!url) {
-        setError("No URL provided")
-        setLoading(false)
-        return
+        setError("No URL provided");
+        setLoading(false);
+        return;
       }
 
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
         // Validate and normalize the URL
-        let normalizedUrl: string
+        let normalizedUrl: string;
         try {
           // Remove trailing slash if present
-          const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
+          const cleanUrl = url.endsWith("/") ? url.slice(0, -1) : url;
           // Ensure URL has protocol
-          const urlWithProtocol = cleanUrl.startsWith('http') ? cleanUrl : `https://${cleanUrl}`
-          const urlObj = new URL(urlWithProtocol)
+          const urlWithProtocol = cleanUrl.startsWith("http")
+            ? cleanUrl
+            : `https://${cleanUrl}`;
+          const urlObj = new URL(urlWithProtocol);
           // Remove www. if present
-          const hostname = urlObj.hostname.replace(/^www\./, '')
-          urlObj.hostname = hostname
-          normalizedUrl = urlObj.toString()
+          const hostname = urlObj.hostname.replace(/^www\./, "");
+          urlObj.hostname = hostname;
+          normalizedUrl = urlObj.toString();
         } catch (error) {
-          throw new Error("Invalid URL format. Please enter a valid URL (e.g., example.com or https://example.com)")
+          throw new Error(
+            "Invalid URL format. Please enter a valid URL (e.g., example.com or https://example.com)"
+          );
         }
 
         // Add a timestamp to prevent caching issues
-        const timestamp = new Date().getTime()
-        const apiUrl = `/api/audit?url=${encodeURIComponent(normalizedUrl)}&_=${timestamp}`
-        
-        console.log(`Fetching audit results from: ${apiUrl}`)
+        const timestamp = new Date().getTime();
+        const apiUrl = `/api/audit?url=${encodeURIComponent(normalizedUrl)}&_=${timestamp}`;
+
         const response = await fetch(apiUrl, {
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
+            Accept: "application/json",
+            "Content-Type": "application/json",
           },
           // Explicitly prevent caching
-          cache: 'no-store'
-        })
-        
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
         if (!response.ok) {
-          let errorMessage = `Error: ${response.status}`
-          try {
-            const errorData = await response.json()
-            errorMessage = errorData.error || errorMessage
-          } catch (e) {
-            // If we can't parse the error JSON, use the status text
-            errorMessage = response.statusText || errorMessage
-          }
-          throw new Error(errorMessage)
+          throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json()
-        setAuditResult(data)
-        setRetryCount(0)
-        setRetryTime(null)
-      } catch (err) {
-        console.error("Failed to fetch audit results:", err)
-        setError(err instanceof Error ? err.message : "An error occurred while analyzing the website")
-        setRetryTime(null)
-      } finally {
-        setLoading(false)
-      }
-    }
+        // Check if we got a valid audit result
+        if (!data || typeof data.overallScore === 'undefined') {
+          throw new Error('Invalid audit result received');
+        }
 
-    // Reset states when URL changes
-    setRetryCount(0)
-    setRetryTime(null)
-    setError(null)
-    
-    fetchAuditResults()
+        setAuditResult(data);
+        setRetryCount(0);
+        setRetryTime(null);
+      } catch (error) {
+        console.error("Failed to fetch audit results:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch audit results"
+        );
+
+        // Only retry for certain errors
+        if (retryCount < MAX_RETRIES && error instanceof Error && 
+            (error.message.includes('timeout') || 
+             error.message.includes('network') ||
+             error.message.includes('failed to fetch'))) {
+          setRetryCount((prev) => prev + 1);
+          setRetryTime(RETRY_DELAY / 1000);
+
+          // Start countdown
+          if (countdownInterval) clearInterval(countdownInterval);
+          countdownInterval = setInterval(() => {
+            setRetryTime((prev) => {
+              if (prev === null || prev <= 1) {
+                clearInterval(countdownInterval);
+                return null;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+
+          // Set up retry
+          if (retryTimeout) clearTimeout(retryTimeout);
+          retryTimeout = setTimeout(fetchAuditResults, RETRY_DELAY);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuditResults();
 
     return () => {
-      if (countdownInterval) clearInterval(countdownInterval)
-      if (retryTimeout) clearTimeout(retryTimeout)
-    }
-  }, [url])
+      if (countdownInterval) clearInterval(countdownInterval);
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [url]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
         <h2 className="text-xl font-semibold mb-2">
-          {retryTime ? 'Waiting to retry...' : 'Analyzing your website'}
+          {retryTime ? "Retrying analysis..." : "Analyzing your website"}
         </h2>
         <p className="text-muted-foreground">
           {retryTime ? (
             <>
-              Rate limit reached. Retrying in {retryTime} seconds...
+              Previous attempt failed. Retrying in {retryTime} seconds...
               <br />
-              Retry attempt {retryCount + 1} of {MAX_RETRIES}
+              Attempt {retryCount} of {MAX_RETRIES}
             </>
           ) : (
-            'This may take a minute or two...'
+            "This may take a minute or two..."
           )}
         </p>
         {retryTime && (
           <div className="w-full max-w-md mt-4">
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all duration-1000" 
-                style={{ 
-                  width: `${(retryTime / 10) * 100}%`
-                }} 
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-1000"
+                style={{
+                  width: `${Math.min(100, (retryTime / (RETRY_DELAY / 1000)) * 100)}%`,
+                }}
               />
             </div>
           </div>
         )}
       </div>
-    )
+    );
   }
 
   if (error || !auditResult) {
@@ -156,27 +201,35 @@ export function AuditResults({ url }: { url: string }) {
                 Retry attempt {retryCount + 1} of {MAX_RETRIES}
               </p>
               <div className="w-1/2 bg-red-200 rounded-full h-2 mt-2">
-                <div 
-                  className="bg-red-500 h-2 rounded-full transition-all duration-1000" 
-                  style={{ 
-                    width: `${(retryTime / 10) * 10}%`
-                  }} 
+                <div
+                  className="bg-red-500 h-2 rounded-full transition-all duration-1000"
+                  style={{
+                    width: `${Math.min(100, (retryTime / 10) * 10)}%`,
+                  }}
                 />
               </div>
             </div>
           )}
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
-  const { overallScore, onPageSEO, technicalSEO, contentSEO, performance, advancedSEO, competitiveAnalysis, localSEO } =
-    auditResult
+  const {
+    overallScore,
+    onPageSEO,
+    technicalSEO,
+    contentSEO,
+    performance,
+    advancedSEO,
+    competitiveAnalysis,
+    localSEO,
+  } = auditResult;
 
   const handleExportPdf = async () => {
-    if (!auditResult) return
+    if (!auditResult) return;
 
-    setIsExporting(true)
+    setIsExporting(true);
     try {
       const defaultOptions: PDFExportOptions = {
         includeWatermark: true,
@@ -191,7 +244,7 @@ export function AuditResults({ url }: { url: string }) {
           localSEO: true,
         },
         includeRecommendations: true,
-      }
+      };
 
       const response = await fetch("/api/export-pdf", {
         method: "POST",
@@ -203,51 +256,53 @@ export function AuditResults({ url }: { url: string }) {
           auditResult,
           exportOptions: defaultOptions,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to generate PDF: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Failed to generate PDF: ${response.statusText}`
+        );
       }
 
       // Get the PDF as a blob
-      const blob = await response.blob()
+      const blob = await response.blob();
 
       // Get filename from Content-Disposition header if available
-      let filename = `seo-audit-report-${new Date().toISOString().split("T")[0]}.pdf`
-      const contentDisposition = response.headers.get('Content-Disposition')
+      let filename = `seo-audit-report-${new Date().toISOString().split("T")[0]}.pdf`;
+      const contentDisposition = response.headers.get("Content-Disposition");
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+?)"/i)
+        const filenameMatch = contentDisposition.match(/filename="(.+?)"/i);
         if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1]
-          console.log(`Using server-generated filename: ${filename}`)
+          filename = filenameMatch[1];
+          console.log(`Using server-generated filename: ${filename}`);
         }
       }
 
       // Create a URL for the blob
-      const pdfUrl = window.URL.createObjectURL(blob)
+      const pdfUrl = window.URL.createObjectURL(blob);
 
       // Create a link element
-      const link = document.createElement("a")
-      link.href = pdfUrl
-      link.download = filename
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = filename;
 
       // Append to the document
-      document.body.appendChild(link)
+      document.body.appendChild(link);
 
       // Trigger the download
-      link.click()
+      link.click();
 
       // Clean up
-      window.URL.revokeObjectURL(pdfUrl)
-      document.body.removeChild(link)
+      window.URL.revokeObjectURL(pdfUrl);
+      document.body.removeChild(link);
     } catch (err) {
-      console.error("Failed to export PDF:", err)
-      setError("Failed to export PDF. Please try again.")
+      console.error("Failed to export PDF:", err);
+      setError("Failed to export PDF. Please try again.");
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -283,7 +338,11 @@ export function AuditResults({ url }: { url: string }) {
               )}
               {isExporting ? "Exporting..." : "Export PDF"}
             </Button>
-            <SocialShare url={url} title="SEO Audit Results" score={overallScore} />
+            <SocialShare
+              url={url}
+              title="SEO Audit Results"
+              score={overallScore}
+            />
           </div>
         </CardContent>
       </Card>
@@ -295,7 +354,8 @@ export function AuditResults({ url }: { url: string }) {
             <CardTitle className="text-xl">{url}</CardTitle>
           </div>
           <CardDescription>
-            Audit completed on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
+            Audit completed on {new Date().toLocaleDateString()} at{" "}
+            {new Date().toLocaleTimeString()}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -307,7 +367,9 @@ export function AuditResults({ url }: { url: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Search Preview</CardTitle>
-          <CardDescription>Here's how your site may appear in search results:</CardDescription>
+          <CardDescription>
+            Here's how your site may appear in search results:
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="bg-white p-4 rounded-md border">
@@ -327,13 +389,20 @@ export function AuditResults({ url }: { url: string }) {
       <Card className="hidden">
         <CardHeader>
           <CardTitle className="text-base">Keywords</CardTitle>
-          <CardDescription>Here are the most common keywords we found on the page:</CardDescription>
+          <CardDescription>
+            Here are the most common keywords we found on the page:
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {contentSEO.keywordDensity.keywords.map((keyword, index) => (
-              <div key={index} className="flex items-center border rounded-md overflow-hidden">
-                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 font-medium">{keyword.count}</div>
+              <div
+                key={index}
+                className="flex items-center border rounded-md overflow-hidden"
+              >
+                <div className="bg-slate-100 dark:bg-slate-800 px-3 py-2 font-medium">
+                  {keyword.count}
+                </div>
                 <div className="px-3 py-2 truncate">{keyword.keyword}</div>
               </div>
             ))}
@@ -345,12 +414,42 @@ export function AuditResults({ url }: { url: string }) {
 
       <Tabs defaultValue="on-page" className="w-full">
         <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 sm:mb-5 lg:grid-cols-6 gap-1">
-          <TabsTrigger value="on-page" className="text-xs sm:text-sm whitespace-nowrap">Basic SEO</TabsTrigger>
-          <TabsTrigger value="technical" className="text-xs sm:text-sm whitespace-nowrap">Advanced SEO</TabsTrigger>
-          <TabsTrigger value="content" className="text-xs sm:text-sm whitespace-nowrap">Content SEO</TabsTrigger>
-          <TabsTrigger value="performance" className="text-xs sm:text-sm whitespace-nowrap">Performance</TabsTrigger>
-          <TabsTrigger value="security" className="text-xs sm:text-sm whitespace-nowrap">Security</TabsTrigger>
-          <TabsTrigger value="competitive" className="text-xs sm:text-sm whitespace-nowrap">Competitive</TabsTrigger>
+          <TabsTrigger
+            value="on-page"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Basic SEO
+          </TabsTrigger>
+          <TabsTrigger
+            value="technical"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Advanced SEO
+          </TabsTrigger>
+          <TabsTrigger
+            value="content"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Content SEO
+          </TabsTrigger>
+          <TabsTrigger
+            value="performance"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Performance
+          </TabsTrigger>
+          <TabsTrigger
+            value="security"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Security
+          </TabsTrigger>
+          <TabsTrigger
+            value="competitive"
+            className="text-xs sm:text-sm whitespace-nowrap"
+          >
+            Competitive
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="on-page" className="space-y-4 sm:mb-4">
@@ -398,12 +497,15 @@ export function AuditResults({ url }: { url: string }) {
               status={onPageSEO.headings.h2Count > 0 ? "good" : "warning"}
               value={`H2: ${onPageSEO.headings.h2Count}`}
               issues={onPageSEO.headings.issues.filter((i) => i.includes("H2"))}
-              recommendations={onPageSEO.headings.recommendations.filter((r) => r.includes("H2"))}
+              recommendations={onPageSEO.headings.recommendations.filter((r) =>
+                r.includes("H2")
+              )}
             />
 
             <AuditItem
               title={
-                auditResult.onPageSEO.imageAlt.withAlt === auditResult.onPageSEO.imageAlt.total
+                auditResult.onPageSEO.imageAlt.withAlt ===
+                auditResult.onPageSEO.imageAlt.total
                   ? "All images on the page have alt attributes."
                   : `${auditResult.onPageSEO.imageAlt.total - auditResult.onPageSEO.imageAlt.withAlt} of ${auditResult.onPageSEO.imageAlt.total} images are missing alt attributes.`
               }
@@ -417,19 +519,24 @@ export function AuditResults({ url }: { url: string }) {
                     {onPageSEO.imageAlt.imageDetails.map((image, index) => (
                       <div key={index} className="border rounded-md p-4">
                         <div className="aspect-video bg-muted rounded-md overflow-hidden mb-2">
-                          <img 
-                            src={image.src} 
-                            alt={image.alt || "No alt text"} 
+                          <img
+                            src={image.src}
+                            alt={image.alt || "No alt text"}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
+                              target.src =
+                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
                             }}
                           />
                         </div>
                         <div className="text-sm">
                           <div className="font-medium">Alt Text:</div>
-                          <div className={image.alt ? "text-green-600" : "text-red-600"}>
+                          <div
+                            className={
+                              image.alt ? "text-green-600" : "text-red-600"
+                            }
+                          >
                             {image.alt || "Missing alt text"}
                           </div>
                         </div>
@@ -483,7 +590,9 @@ export function AuditResults({ url }: { url: string }) {
               status="good"
               value="No noindex tags found"
               issues={[]}
-              recommendations={["Only use noindex meta tag or header on pages you want to keep out of search engines"]}
+              recommendations={[
+                "Only use noindex meta tag or header on pages you want to keep out of search engines",
+              ]}
             />
 
             <AuditItem
@@ -491,7 +600,9 @@ export function AuditResults({ url }: { url: string }) {
               status="warning"
               value="Some Open Graph meta tags are missing."
               issues={["Missing og:title, og:type, og:url tags"]}
-              recommendations={["Insert a customized Open Graph meta tag for each important page on your site."]}
+              recommendations={[
+                "Insert a customized Open Graph meta tag for each important page on your site.",
+              ]}
             />
 
             <AuditItem
@@ -527,12 +638,16 @@ export function AuditResults({ url }: { url: string }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {technicalSEO.brokenLinks.brokenList.map((link, index) => (
-                          <tr key={index} className="border-t">
-                            <td className="px-4 py-2 break-all">{link.url}</td>
-                            <td className="px-4 py-2">{link.statusCode}</td>
-                          </tr>
-                        ))}
+                        {technicalSEO.brokenLinks.brokenList.map(
+                          (link, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="px-4 py-2 break-all">
+                                {link.url}
+                              </td>
+                              <td className="px-4 py-2">{link.statusCode}</td>
+                            </tr>
+                          )
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -584,13 +699,15 @@ export function AuditResults({ url }: { url: string }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {contentSEO.keywordDensity.keywords.map((keyword, index) => (
-                          <tr key={index} className="border-t">
-                            <td className="px-4 py-2">{keyword.keyword}</td>
-                            <td className="px-4 py-2">{keyword.count}</td>
-                            <td className="px-4 py-2">{keyword.density}</td>
-                          </tr>
-                        ))}
+                        {contentSEO.keywordDensity.keywords.map(
+                          (keyword, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="px-4 py-2">{keyword.keyword}</td>
+                              <td className="px-4 py-2">{keyword.count}</td>
+                              <td className="px-4 py-2">{keyword.density}</td>
+                            </tr>
+                          )
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -669,7 +786,9 @@ export function AuditResults({ url }: { url: string }) {
               status="warning"
               value="Some JavaScript and CSS files don't seem to be minified."
               issues={["Unminified files increase page load time"]}
-              recommendations={["Minify all JavaScript and CSS files to improve page load speed."]}
+              recommendations={[
+                "Minify all JavaScript and CSS files to improve page load speed.",
+              ]}
             />
 
             <AuditItem
@@ -677,7 +796,9 @@ export function AuditResults({ url }: { url: string }) {
               status="warning"
               value="The size of the HTML document is over our recommendation of 50 Kb."
               issues={["Large HTML documents can slow down page rendering"]}
-              recommendations={["Reduce HTML size by removing unnecessary markup and comments."]}
+              recommendations={[
+                "Reduce HTML size by removing unnecessary markup and comments.",
+              ]}
             />
 
             <AuditItem
@@ -714,7 +835,9 @@ export function AuditResults({ url }: { url: string }) {
               status="good"
               value="Directory Listing seems to be disabled on the server."
               issues={[]}
-              recommendations={["Keep directory listing disabled to prevent exposing sensitive files."]}
+              recommendations={[
+                "Keep directory listing disabled to prevent exposing sensitive files.",
+              ]}
             />
 
             <AuditItem
@@ -722,7 +845,9 @@ export function AuditResults({ url }: { url: string }) {
               status="good"
               value="Google has not flagged this site for malware."
               issues={[]}
-              recommendations={["Regularly scan your site for malware and suspicious code."]}
+              recommendations={[
+                "Regularly scan your site for malware and suspicious code.",
+              ]}
             />
 
             <AuditItem
@@ -737,7 +862,10 @@ export function AuditResults({ url }: { url: string }) {
               title="HTTP headers"
               status="warning"
               value="Some security headers are missing."
-              issues={["Missing Content-Security-Policy header", "Missing X-XSS-Protection header"]}
+              issues={[
+                "Missing Content-Security-Policy header",
+                "Missing X-XSS-Protection header",
+              ]}
               recommendations={[
                 "Implement Content-Security-Policy headers to prevent XSS attacks",
                 "Add X-XSS-Protection and X-Content-Type-Options headers",
@@ -757,7 +885,9 @@ export function AuditResults({ url }: { url: string }) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Competitor Overview</CardTitle>
-              <CardDescription>Analysis of your top competitors in search results</CardDescription>
+              <CardDescription>
+                Analysis of your top competitors in search results
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {competitiveAnalysis.competitors.length > 0 ? (
@@ -772,31 +902,41 @@ export function AuditResults({ url }: { url: string }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {competitiveAnalysis.competitors.map((competitor, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-1">
-                              {competitor.domain}
-                              <a
-                                href={`https://${competitor.domain}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:text-blue-700"
-                              >
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            </div>
-                          </td>
-                          <td className="px-4 py-2">{competitor.shareOfVoice}</td>
-                          <td className="px-4 py-2">{competitor.commonKeywords}</td>
-                          <td className="px-4 py-2">{competitor.uniqueKeywords}</td>
-                        </tr>
-                      ))}
+                      {competitiveAnalysis.competitors.map(
+                        (competitor, index) => (
+                          <tr key={index} className="border-t">
+                            <td className="px-4 py-2">
+                              <div className="flex items-center gap-1">
+                                {competitor.domain}
+                                <a
+                                  href={`https://${competitor.domain}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-500 hover:text-blue-700"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2">
+                              {competitor.shareOfVoice}
+                            </td>
+                            <td className="px-4 py-2">
+                              {competitor.commonKeywords}
+                            </td>
+                            <td className="px-4 py-2">
+                              {competitor.uniqueKeywords}
+                            </td>
+                          </tr>
+                        )
+                      )}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <p className="text-muted-foreground">No competitor data available</p>
+                <p className="text-muted-foreground">
+                  No competitor data available
+                </p>
               )}
             </CardContent>
           </Card>
@@ -804,17 +944,28 @@ export function AuditResults({ url }: { url: string }) {
           <Accordion type="single" collapsible className="space-y-4 sm:mb-4">
             <AuditItem
               title="Keyword gaps"
-              status={competitiveAnalysis.keywordGaps.length > 0 ? "warning" : "good"}
+              status={
+                competitiveAnalysis.keywordGaps.length > 0 ? "warning" : "good"
+              }
               value={`${competitiveAnalysis.keywordGaps.length} keyword opportunities identified`}
-              issues={competitiveAnalysis.issues.filter((issue) => issue.includes("keyword"))}
-              recommendations={competitiveAnalysis.recommendations.filter((rec) => rec.includes("keyword"))}
+              issues={competitiveAnalysis.issues.filter((issue) =>
+                issue.includes("keyword")
+              )}
+              recommendations={competitiveAnalysis.recommendations.filter(
+                (rec) => rec.includes("keyword")
+              )}
               details={
                 competitiveAnalysis.keywordGaps.length > 0 ? (
                   <div className="mt-4">
-                    <h4 className="font-semibold mb-2">Keyword Opportunities:</h4>
+                    <h4 className="font-semibold mb-2">
+                      Keyword Opportunities:
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {competitiveAnalysis.keywordGaps.map((keyword, index) => (
-                        <span key={index} className="px-2 py-1 bg-muted rounded-md text-sm">
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-muted rounded-md text-sm"
+                        >
                           {keyword}
                         </span>
                       ))}
@@ -826,14 +977,22 @@ export function AuditResults({ url }: { url: string }) {
 
             <AuditItem
               title="Content gaps"
-              status={competitiveAnalysis.contentGaps.length > 0 ? "warning" : "good"}
+              status={
+                competitiveAnalysis.contentGaps.length > 0 ? "warning" : "good"
+              }
               value={`${competitiveAnalysis.contentGaps.length} content opportunities identified`}
-              issues={competitiveAnalysis.issues.filter((issue) => issue.includes("content"))}
-              recommendations={competitiveAnalysis.recommendations.filter((rec) => rec.includes("content"))}
+              issues={competitiveAnalysis.issues.filter((issue) =>
+                issue.includes("content")
+              )}
+              recommendations={competitiveAnalysis.recommendations.filter(
+                (rec) => rec.includes("content")
+              )}
               details={
                 competitiveAnalysis.contentGaps.length > 0 ? (
                   <div className="mt-4">
-                    <h4 className="font-semibold mb-2">Content Opportunities:</h4>
+                    <h4 className="font-semibold mb-2">
+                      Content Opportunities:
+                    </h4>
                     <ul className="list-disc pl-5 space-y-1">
                       {competitiveAnalysis.contentGaps.map((content, index) => (
                         <li key={index} className="text-sm">
@@ -851,34 +1010,49 @@ export function AuditResults({ url }: { url: string }) {
               status={competitiveAnalysis.backlinksComparison.status}
               value={competitiveAnalysis.backlinksComparison.value}
               issues={competitiveAnalysis.backlinksComparison.issues}
-              recommendations={competitiveAnalysis.backlinksComparison.recommendations}
+              recommendations={
+                competitiveAnalysis.backlinksComparison.recommendations
+              }
             />
           </Accordion>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 interface AuditItemProps {
-  title: string
-  status: "good" | "warning" | "error"
-  value: string
-  issues: string[]
-  recommendations: string[]
-  details?: React.ReactNode
+  title: string;
+  status: "good" | "warning" | "error";
+  value: string;
+  issues: string[];
+  recommendations: string[];
+  details?: React.ReactNode;
 }
 
-function AuditItem({ title, status, value, issues, recommendations, details }: AuditItemProps) {
+function AuditItem({
+  title,
+  status,
+  value,
+  issues,
+  recommendations,
+  details,
+}: AuditItemProps) {
   return (
     <Card>
       <AccordionItem value={title} className="border-none">
         <CardHeader className="pb-2">
           <AccordionTrigger className="py-0">
             <div className="flex items-center gap-3 text-left">
-              {status === "good" && <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />}
-              {status === "warning" && <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />}
-              {status === "error" && <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />}
+              {status === "good" && (
+                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+              )}
+              {status === "warning" && (
+                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              )}
+              {status === "error" && (
+                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              )}
               <div>
                 <CardTitle className="text-base">{title}</CardTitle>
                 <CardDescription className="text-sm">{value}</CardDescription>
@@ -919,5 +1093,5 @@ function AuditItem({ title, status, value, issues, recommendations, details }: A
         </AccordionContent>
       </AccordionItem>
     </Card>
-  )
+  );
 }

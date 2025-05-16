@@ -1,4 +1,4 @@
-import { PrismaClient } from './generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -7,6 +7,7 @@ export interface DomainInput {
   ipAddress?: string;
   pdfData?: Uint8Array;
   pdfPath?: string;
+  userId?: string;
 }
 
 export interface DomainReport {
@@ -14,6 +15,7 @@ export interface DomainReport {
   ipAddress?: string;
   reportData?: Uint8Array;
   reportPath?: string;
+  userId?: string;
 }
 
 export async function addDomain(data: DomainInput) {
@@ -24,6 +26,7 @@ export async function addDomain(data: DomainInput) {
         ipAddress: data.ipAddress,
         pdfData: data.pdfData,
         pdfPath: data.pdfPath,
+        userId: data.userId,
       },
     });
     return domain;
@@ -57,7 +60,7 @@ export async function getAllDomains() {
   }
 }
 
-export async function searchAndStoreDomain(domainName: string): Promise<DomainReport> {
+export async function searchAndStoreDomain(domainName: string, userId?: string): Promise<DomainReport> {
   try {
     // First check if domain already exists
     const existingDomain = await prisma.domain.findUnique({
@@ -65,11 +68,20 @@ export async function searchAndStoreDomain(domainName: string): Promise<DomainRe
     });
 
     if (existingDomain) {
+      // If domain exists but doesn't have a userId and we have one, update it
+      if (!existingDomain.userId && userId) {
+        await prisma.domain.update({
+          where: { id: existingDomain.id },
+          data: { userId }
+        });
+      }
+      
       return {
         domainName: existingDomain.domainName,
         ipAddress: existingDomain.ipAddress || undefined,
         reportData: existingDomain.pdfData || undefined,
         reportPath: existingDomain.pdfPath || undefined,
+        userId: existingDomain.userId || undefined,
       };
     }
 
@@ -77,6 +89,7 @@ export async function searchAndStoreDomain(domainName: string): Promise<DomainRe
     const newDomain = await prisma.domain.create({
       data: {
         domainName,
+        userId,
         // IP address will be added later if available
       },
     });
@@ -86,6 +99,7 @@ export async function searchAndStoreDomain(domainName: string): Promise<DomainRe
       ipAddress: newDomain.ipAddress || undefined,
       reportData: newDomain.pdfData || undefined,
       reportPath: newDomain.pdfPath || undefined,
+      userId: newDomain.userId || undefined,
     };
   } catch (error) {
     console.error('Error in searchAndStoreDomain:', error);
@@ -102,6 +116,7 @@ export async function updateDomainReport(domainName: string, reportData: Partial
         ipAddress: reportData.ipAddress,
         pdfData: reportData.reportData,
         pdfPath: reportData.reportPath,
+        userId: reportData.userId,
       },
     });
     return updatedDomain;
