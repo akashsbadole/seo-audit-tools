@@ -3,6 +3,13 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useUser, SignInButton, SignUpButton, UserButton, useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle
+} from "@/components/ui/navigation-menu";
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -80,114 +87,118 @@ const Header = () => {
               : "opacity-0 -translate-y-full invisible md:visible md:opacity-100 md:translate-y-0"
           } md:block`}
         >
-          <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4 md:p-0 items-center">
-            <li>
-              <Link
-                href="/"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={(e) => {
-                  setIsOpen(false);
-                }}
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/keyword-research"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={() => setIsOpen(false)}
-              >
-                Keyword Research Tool
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/meta-tags-generator"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={() => setIsOpen(false)}
-              >
-                Meta Tags Generator
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/open-graph-generator"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={() => setIsOpen(false)}
-              >
-                Open Graph Generator
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/campaign-url-builder"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={() => setIsOpen(false)}
-              >
-                Campaign URL Builder
-              </Link>
-            </li>
-            <li>
-              <a
-                href="#about"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={(e) => handleScroll(e, "about")}
-              >
-                About
-              </a>
-            </li>
-            <li>
-              <a
-                href="#contact"
-                className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
-                onClick={(e) => handleScroll(e, "contact")}
-              >
-                Contact
-              </a>
-            </li>
-            {!isSignedIn ? (
-              <>
-                <li>
-                  <SignInButton mode="modal">
-                    <button className="block text-indigo-200 hover:text-white transition-colors text-[13px] bg-transparent border border-indigo-200 px-4 py-1 rounded-md hover:bg-indigo-200 hover:text-indigo-900">
-                      Login
-                    </button>
-                  </SignInButton>
-                </li>
-                <li>
-                  <SignUpButton mode="modal">
-                    <button className="block text-indigo-900 bg-indigo-200 hover:bg-white transition-colors text-[14px] px-4 py-1 rounded-md">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </li>
-              </>
-            ) : (
-              <>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <ul className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 p-4 md:p-0 items-center">
                 <li>
                   <Link
-                    href="/dashboard"
-                    className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
-                    onClick={() => setIsOpen(false)}
+                    href="/"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={(e) => {
+                      setIsOpen(false);
+                    }}
                   >
-                    Dashboard
+                    Home
                   </Link>
                 </li>
                 <li>
-                  <button
-                    onClick={() => signOut()}
-                    className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
+                  <Link
+                    href="/keyword-research"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={() => setIsOpen(false)}
                   >
-                    Logout
-                  </button>
+                    Keyword Research Tool
+                  </Link>
                 </li>
                 <li>
-                  <UserButton afterSignOutUrl="/" />
+                  <Link
+                    href="/meta-tags-generator"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Meta Tags Generator
+                  </Link>
                 </li>
-              </>
-            )}
-          </ul>
+                <li>
+                  <Link
+                    href="/open-graph-generator"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Open Graph Generator
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/campaign-url-builder"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Campaign URL Builder
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/freelance-services"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Freelance 
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="#about"
+                    className="block text-indigo-200 hover:text-white transition-colors text-[13px]"
+                    onClick={(e) => handleScroll(e, "about")}
+                  >
+                    About
+                  </a>
+                </li>
+                {!isSignedIn ? (
+                  <>
+                    <li>
+                      <SignInButton mode="modal">
+                        <button className="block text-indigo-200 hover:text-white transition-colors text-[13px] bg-transparent border border-indigo-200 px-4 py-1 rounded-md hover:bg-indigo-200 hover:text-indigo-900">
+                          Login
+                        </button>
+                      </SignInButton>
+                    </li>
+                    <li>
+                      <SignUpButton mode="modal">
+                        <button className="block text-indigo-900 bg-indigo-200 hover:bg-white transition-colors text-[14px] px-4 py-1 rounded-md">
+                          Sign Up
+                        </button>
+                      </SignUpButton>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <Link
+                        href="/dashboard"
+                        className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => signOut()}
+                        className="block text-indigo-200 hover:text-white transition-colors text-[13px] mr-4"
+                      >
+                        Logout
+                      </button>
+                    </li>
+                    <li>
+                      <UserButton afterSignOutUrl="/" />
+                    </li>
+                  </>
+                )}
+              </ul>
+            </NavigationMenuList>
+          </NavigationMenu>
         </nav>
       </div>
     </header>

@@ -1,9 +1,9 @@
 import { AuditForm } from "@/components/audit-form"
 import { HeroSection } from "@/components/hero-section"
-
 import { AboutSection } from "@/components/about-section"
 import { ContactForm } from "@/components/contact-form"
 import { ScrollToTop } from "@/components/scroll-to-top"
+import { PremiumFeatures } from "@/components/premium-features"
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
           <AuditForm />
         </div>
       </div>
-      
+      <PremiumFeatures />
       <AboutSection />
       <ContactForm />
       <ScrollToTop />

@@ -161,15 +161,15 @@ function KeywordResearchContent() {
       }
 
       const data = await response.json();
-      const allKeywords = Array.from({ length: 100 }, (_, i) => ({
-        keyword: `${data.suggestions[i % data.suggestions.length]} ${i + 1}`,
+      const allKeywords = data.suggestions.map((suggestion: string) => ({
+        keyword: suggestion,
         searchVolume: Math.floor(Math.random() * 100000),
         trend: ["Increasing", "Stable", "Decreasing"][
           Math.floor(Math.random() * 3)
         ],
         cpc: Number((Math.random() * 5).toFixed(2)),
         competition: Number(Math.random().toFixed(2)),
-        isPremium: i >= 50,
+        isPremium: Math.random() > 0.5,
       }));
       setKeywordData(allKeywords);
       setLastSearchTime(Date.now());
@@ -259,7 +259,7 @@ function KeywordResearchContent() {
                 <button
                   key={p.id}
                   onClick={() => setPlatform(p.id)}
-                  className={`flex items-center gap-1 text-[12px] pl-2 pr-2 py-1 rounded-full border transition-colors whitespace-nowrap ${platform === p.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-primary/10"} ${p.color}`}
+                  className={`flex items-center gap-1 text-[11px] pl-2 pr-1 py-1 rounded-full border transition-colors whitespace-nowrap ${platform === p.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-primary/10"} ${p.color}`}
                   type="button"
                 >
                   <Image
@@ -361,14 +361,15 @@ function KeywordResearchContent() {
                   </Badge>
                 )}
                 <KeywordTable
-                  data={isPremium ? keywordData : keywordData.slice(0, 50)}
-                  showPremium={isPremium}
+                  data={keywordData.slice(0, 50)}
+                  showPremium={false}
+                  onPremiumClick={() => window.location.href = '/login'}
                 />
                 {!isPremium && (
                   <div className="text-center mt-4">
                     <Button
                       variant="outline"
-                      onClick={() => setIsPremium(true)}
+                      onClick={() => window.location.href = '/login'}
                       className="flex items-center gap-2"
                     >
                       <Lock className="h-4 w-4" />

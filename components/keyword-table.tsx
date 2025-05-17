@@ -26,9 +26,10 @@ export interface KeywordData {
 interface KeywordTableProps {
   data: KeywordData[];
   showPremium?: boolean;
+  onPremiumClick?: () => void;
 }
 
-export function KeywordTable({ data, showPremium = false }: KeywordTableProps) {
+export function KeywordTable({ data, showPremium = false, onPremiumClick }: KeywordTableProps) {
   const [sortField, setSortField] = useState<keyof KeywordData>('searchVolume');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -185,7 +186,15 @@ export function KeywordTable({ data, showPremium = false }: KeywordTableProps) {
           </TableHeader>
           <TableBody>
             {sortedData.map((row, index) => (
-              <TableRow key={index} className={row.isPremium && !showPremium ? 'opacity-50' : ''}>
+              <TableRow 
+                key={index} 
+                className={row.isPremium && !showPremium ? 'opacity-50 cursor-pointer hover:opacity-75 transition-opacity' : ''}
+                onClick={() => {
+                  if (row.isPremium && !showPremium && onPremiumClick) {
+                    onPremiumClick();
+                  }
+                }}
+              >
                 <TableCell className="font-medium">
                   {row.keyword}
                   {row.isPremium && !showPremium && (

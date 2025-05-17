@@ -1,4 +1,9 @@
 export async function verifyRecaptcha(token: string): Promise<boolean> {
+  // Bypass reCAPTCHA verification in development
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+
   try {
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',

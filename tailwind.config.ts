@@ -92,7 +92,7 @@ const config: Config = {
 			container: {
 				center: true,
 				screens: {
-					DEFAULT: '1200px',
+					DEFAULT: '1350px',
 				},
 			},
 		}
