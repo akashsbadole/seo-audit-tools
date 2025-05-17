@@ -7,6 +7,7 @@ import Head from "next/head";
 import Script from "next/script";
 import { Providers } from "@/components/providers";
 import { ClerkProvider } from "@clerk/nextjs";
+import { BuyMeCoffee } from "@/components/BuyMeCoffee";
 
 declare global {
   interface Window {
@@ -44,6 +45,7 @@ export default function RootLayout({
               <Header />
               <main className="flex-grow">{children}</main>
               <Footer />
+              <BuyMeCoffee username="akashbadole" />
             </div>
             <Toaster />
             <Script

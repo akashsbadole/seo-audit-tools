@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { BuyMeCoffee } from "./BuyMeCoffee";
 
 const Footer = () => {
   return (
@@ -70,7 +71,8 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        <div className="border-t border-border mt-8 pt-8">
+        <div className="border-t border-border mt-8 pt-8 flex flex-col items-center gap-4">
+          <BuyMeCoffee username="akashbadole" />
           <p className="text-center text-muted-foreground text-sm">
             &copy; {new Date().getFullYear()} SEO Audit Tool. All rights
             reserved.

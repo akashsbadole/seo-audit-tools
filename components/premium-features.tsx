@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Check, Zap, Star, Clock, LineChart, Lock, Search, FileText, Code } from "lucide-react"
 import Link from "next/link"
+import { SignInButton } from "@clerk/nextjs"
 
 export function PremiumFeatures() {
   const features = [
@@ -105,11 +106,7 @@ export function PremiumFeatures() {
         </div>
       </div>
 
-      <div className="text-center mt-12">
-        <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white">
-          <Lock className="h-4 w-4 mr-2" />
-          <Link href="/pricing">Login</Link>
-        </Button>
+      <div className="text-center mt-4">
         <p className="text-sm text-indigo-600 mt-4">
           All tools require login. Login for unlimited access and advanced features.
         </p>
