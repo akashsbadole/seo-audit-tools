@@ -60,7 +60,7 @@ export function AuditForm() {
   }
 
   return (
-    <Card className="w-full bg-[#111827]">
+    <Card className="w-full bg-indigo-900">
       <CardHeader>
         <CardTitle className="text-white">Website SEO Audit</CardTitle>
         <CardDescription>
@@ -98,7 +98,7 @@ export function AuditForm() {
             />
             <Button
               type="submit"
-              className="w-full bg-indigo-900 hover:bg-indigo-800 text-white"
+              className="w-full bg-blue-900 hover:bg-blue-800 text-white"
               disabled={isLoading}
             >
               {isLoading ? (

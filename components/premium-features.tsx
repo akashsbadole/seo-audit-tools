@@ -52,14 +52,14 @@ export function PremiumFeatures() {
   ]
 
   return (
-    <div id="premium" className="container mx-auto px-4 py-12">
+    <div id="premium" className="container bg-indigo-900 mx-auto px-4 py-12">
       <div className="text-center mb-12">
-        <Badge variant="secondary" className="mb-4">
+        <Badge variant="secondary" className="mb-4 p-4">
           <Star className="h-4 w-4 mr-1" />
           Premium Features
         </Badge>
-        <h2 className="text-3xl font-bold text-indigo-900 mb-4">Professional SEO Tools Suite</h2>
-        <p className="text-lg text-indigo-700 max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold text-white mb-4">Professional SEO Tools Suite</h2>
+        <p className="text-lg text-gray max-w-2xl mx-auto">
           Access our complete suite of professional SEO tools and unlock premium features for comprehensive website optimization.
         </p>
       </div>
@@ -107,7 +107,7 @@ export function PremiumFeatures() {
       </div>
 
       <div className="text-center mt-4">
-        <p className="text-sm text-indigo-600 mt-4">
+        <p className="text-sm text-white mt-4">
           All tools require login. Login for unlimited access and advanced features.
         </p>
       </div>

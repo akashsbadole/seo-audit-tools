@@ -65,7 +65,7 @@ export function ContactForm() {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto bg-indigo-900">
       <CardHeader>
         <CardTitle>Contact Us</CardTitle>
         <CardDescription>
