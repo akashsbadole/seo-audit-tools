@@ -179,7 +179,7 @@ export function CampaignUrlBuilder() {
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-blue-600 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateCampaignUrl()}</code>
               </pre>
             </div>

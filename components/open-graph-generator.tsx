@@ -39,7 +39,11 @@ export function OpenGraphGenerator() {
 <meta property="og:image" content="${ogData.image}">
 ${ogData.audio ? `<meta property="og:audio" content="${ogData.audio}">` : ""}
 ${ogData.video ? `<meta property="og:video" content="${ogData.video}">` : ""}
-${ogData.determiner ? `<meta property="og:determiner" content="${ogData.determiner}">` : ""}
+${
+  ogData.determiner
+    ? `<meta property="og:determiner" content="${ogData.determiner}">`
+    : ""
+}
 <meta property="og:locale" content="${ogData.locale}">
 ${
   ogData.alternateLocales
@@ -52,7 +56,11 @@ ${
         .join("\n")
     : ""
 }
-${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">` : ""}`;
+${
+  ogData.siteName
+    ? `<meta property="og:site_name" content="${ogData.siteName}">`
+    : ""
+}`;
   };
 
   const handleCopy = () => {
@@ -214,7 +222,7 @@ ${ogData.siteName ? `<meta property="og:site_name" content="${ogData.siteName}">
               </Button>
             </div>
             <div className="relative">
-              <pre className="bg-indigo-200 p-4 rounded-md overflow-auto text-sm">
+              <pre className="bg-blue-600 p-4 rounded-md overflow-auto text-sm">
                 <code>{generateOpenGraphTags()}</code>
               </pre>
             </div>

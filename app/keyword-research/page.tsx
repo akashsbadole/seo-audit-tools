@@ -148,7 +148,9 @@ function KeywordResearchContent() {
       const token = await executeRecaptcha("keyword_research");
 
       const response = await fetch(
-        `/api/keyword-suggestions?platform=${platform}&searchType=${searchType}&keyword=${encodeURIComponent(keyword)}&country=${country}&language=${language}`,
+        `/api/keyword-suggestions?platform=${platform}&searchType=${searchType}&keyword=${encodeURIComponent(
+          keyword
+        )}&country=${country}&language=${language}`,
         {
           headers: {
             "X-Recaptcha-Token": token,
@@ -242,7 +244,7 @@ function KeywordResearchContent() {
   ];
 
   return (
-    <div className="container mx-auto py-8 px-4 md:px-[150px] min-h-screen">
+    <div className="containerA mx-auto py-8 px-4 md:px-[100px] min-h-screen">
       <Card>
         <CardHeader>
           <CardTitle>Keyword Research</CardTitle>
@@ -259,7 +261,11 @@ function KeywordResearchContent() {
                 <button
                   key={p.id}
                   onClick={() => setPlatform(p.id)}
-                  className={`flex items-center gap-1 text-[11px] pl-2 pr-1 py-1 rounded-full border transition-colors whitespace-nowrap ${platform === p.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-primary/10"} ${p.color}`}
+                  className={`flex items-center gap-1 text-[11px] pl-2 pr-1 py-1 rounded-full border transition-colors whitespace-nowrap ${
+                    platform === p.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-primary/10"
+                  } ${p.color}`}
                   type="button"
                 >
                   <Image
@@ -344,8 +350,8 @@ function KeywordResearchContent() {
                 {loading
                   ? "Searching..."
                   : timeRemaining > 0
-                    ? "Please wait"
-                    : "Search"}
+                  ? "Please wait"
+                  : "Search"}
               </Button>
             </div>
             {/* Results Table and Premium logic remain unchanged */}
@@ -363,13 +369,13 @@ function KeywordResearchContent() {
                 <KeywordTable
                   data={keywordData.slice(0, 50)}
                   showPremium={false}
-                  onPremiumClick={() => window.location.href = '/login'}
+                  onPremiumClick={() => (window.location.href = "/login")}
                 />
                 {!isPremium && (
                   <div className="text-center mt-4">
                     <Button
                       variant="outline"
-                      onClick={() => window.location.href = '/login'}
+                      onClick={() => (window.location.href = "/login")}
                       className="flex items-center gap-2"
                     >
                       <Lock className="h-4 w-4" />

@@ -95,6 +95,12 @@ const config: Config = {
 					DEFAULT: '1350px',
 				},
 			},
+			containerA: {
+				center: true,
+				screens: {
+					DEFAULT: '1550px',
+				},
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
