@@ -134,6 +134,20 @@ export function MainNav() {
           </Link>
         </NavigationMenuItem>
         <NavigationMenuItem>
+          <Link href="/audits" legacyBehavior passHref>
+            <NavigationMenuLink
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                pathname === "/audits" || pathname.startsWith("/audits/")
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
+            >
+              Audits
+            </NavigationMenuLink>
+          </Link>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
           <NavigationMenuTrigger className="text-sm font-medium text-muted-foreground hover:text-primary">
             Tools
           </NavigationMenuTrigger>

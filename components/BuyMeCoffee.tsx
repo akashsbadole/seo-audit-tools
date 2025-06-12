@@ -1,13 +1,13 @@
-import { Coffee } from 'lucide-react';
+import { Coffee } from "lucide-react";
 
 interface BuyMeCoffeeProps {
   username: string;
   className?: string;
 }
 
-export function BuyMeCoffee({ username, className = '' }: BuyMeCoffeeProps) {
+export function BuyMeCoffee({ username, className = "" }: BuyMeCoffeeProps) {
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-50">
+    <div className=" right-6 top-1/2 -translate-y-1/2 z-50">
       <a
         href={`https://www.buymeacoffee.com/${username}`}
         target="_blank"
@@ -19,4 +19,4 @@ export function BuyMeCoffee({ username, className = '' }: BuyMeCoffeeProps) {
       </a>
     </div>
   );
-} 
+}

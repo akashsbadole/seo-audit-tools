@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { MainDashboard } from "@/components/dashboard/main-dashboard";
+import { SEOToolsDashboard } from "@/components/seo-tools-dashboard";
+import { ContactForm } from "@/components/contact-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -10,31 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Search,
-  FileSearch,
-  Download,
-  ExternalLink,
-  BarChart2,
-  Target,
-  AlertCircle,
-  Link2,
-  FileText,
-  Settings,
-  Bell,
-  TrendingUp,
-  Users,
-} from "lucide-react";
-import Link from "next/link";
-import { useAuth, useUser } from "@clerk/nextjs";
-import { UserButton } from "@clerk/nextjs";
-import { KeywordTracking } from "@/components/keyword-tracking";
-import { CompetitorAnalysis } from "@/components/competitor-analysis";
-import { TechnicalSEO } from "@/components/technical-seo";
-import { AuditHistory } from "@/components/audit-history";
-import { SEOToolsDashboard } from "@/components/seo-tools-dashboard";
-import { ContactForm } from "@/components/contact-form";
 import { toast } from "@/components/ui/use-toast";
 
 interface KeywordSearch {
@@ -72,7 +51,7 @@ export default function DashboardPage() {
       try {
         setIsLoading(true);
         const response = await fetch(`/api/users/${userId}`);
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             // Create user if not exists
@@ -81,16 +60,16 @@ export default function DashboardPage() {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ 
+              body: JSON.stringify({
                 userId,
-                email: user.emailAddresses[0]?.emailAddress 
+                email: user.emailAddresses[0]?.emailAddress,
               }),
             });
-            
+
             if (!createResponse.ok) {
-              throw new Error('Failed to create user');
+              throw new Error("Failed to create user");
             }
-            
+
             const newUser = await createResponse.json();
             setDbUser(newUser);
           } else {
@@ -104,7 +83,8 @@ export default function DashboardPage() {
         console.error("Error fetching user:", error);
         toast({
           title: "Error",
-          description: "There was a problem connecting to the database. Please try again later.",
+          description:
+            "There was a problem connecting to the database. Please try again later.",
           variant: "destructive",
         });
       } finally {
@@ -131,11 +111,16 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Tabs defaultValue="tools" className="space-y-6">
+      <Tabs defaultValue="dashboard" className="space-y-6">
         <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="tools">SEO Tools</TabsTrigger>
           <TabsTrigger value="contact">Contact Us</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-6">
+          <MainDashboard />
+        </TabsContent>
 
         <TabsContent value="tools" className="space-y-6">
           <SEOToolsDashboard />
