@@ -7,7 +7,7 @@ interface BuyMeCoffeeProps {
 
 export function BuyMeCoffee({ username, className = "" }: BuyMeCoffeeProps) {
   return (
-    <div className=" right-6 top-1/2 -translate-y-1/2 z-50">
+    <div className=" z-50">
       <a
         href={`https://www.buymeacoffee.com/${username}`}
         target="_blank"
