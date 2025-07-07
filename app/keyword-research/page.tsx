@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Lock, Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { KeywordTable, KeywordData } from "@/components/keyword-table";
 import Image from "next/image";
 import {
@@ -118,7 +118,6 @@ function KeywordResearchContent() {
   const [language, setLanguage] = useState("en");
   const [loading, setLoading] = useState(false);
   const [keywordData, setKeywordData] = useState<KeywordData[]>([]);
-  const [isPremium, setIsPremium] = useState(false);
   const [lastSearchTime, setLastSearchTime] = useState<number>(0);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -171,7 +170,6 @@ function KeywordResearchContent() {
         ],
         cpc: Number((Math.random() * 5).toFixed(2)),
         competition: Number(Math.random().toFixed(2)),
-        isPremium: Math.random() > 0.5,
       }));
       setKeywordData(allKeywords);
       setLastSearchTime(Date.now());
@@ -354,35 +352,10 @@ function KeywordResearchContent() {
                   : "Search"}
               </Button>
             </div>
-            {/* Results Table and Premium logic remain unchanged */}
+            {/* Results Table without premium logic */}
             {keywordData.length > 0 && (
               <div className="space-y-4">
-                {!isPremium && (
-                  <Badge
-                    variant="outline"
-                    className="text-xs flex items-center gap-1"
-                  >
-                    <Lock className="h-3 w-3" />
-                    Premium Keywords Available
-                  </Badge>
-                )}
-                <KeywordTable
-                  data={keywordData.slice(0, 50)}
-                  showPremium={false}
-                  onPremiumClick={() => (window.location.href = "/login")}
-                />
-                {!isPremium && (
-                  <div className="text-center mt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => (window.location.href = "/login")}
-                      className="flex items-center gap-2"
-                    >
-                      <Lock className="h-4 w-4" />
-                      Unlock Premium Keywords
-                    </Button>
-                  </div>
-                )}
+                <KeywordTable data={keywordData.slice(0, 50)} />
               </div>
             )}
           </div>
