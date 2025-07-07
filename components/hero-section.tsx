@@ -47,7 +47,7 @@ export function HeroSection() {
 
           {/* Clerk Auth Buttons */}
           {!isSignedIn && (
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
+            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4 hidden">
               <SignInButton mode="modal">
                 <Button variant="outline" className="w-40">
                   Login
@@ -60,7 +60,6 @@ export function HeroSection() {
               </SignUpButton>
             </div>
           )}
-         
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link href="/keyword-research" className="group">

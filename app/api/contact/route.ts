@@ -1,56 +1,66 @@
-import { NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
-import { prisma } from "@/lib/prisma"
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const body = await req.json();
+    const { name, email, phone, service, message } = body;
 
-    const body = await req.json()
-    const { name, email, phone, service, message } = body
-
-    // Validate required fields
     if (!name || !email || !service || !message) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
-      )
+      );
     }
 
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    // Create contact request
-    const contactRequest = await prisma.contactRequest.create({
+    // Create contact request in DB
+    await prisma.contactRequest.create({
       data: {
-        userId: user.id,
+        id: crypto.randomUUID(),
         name,
         email,
         phone,
         service,
         message,
         status: "PENDING",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    })
+    });
 
-    // TODO: Send email notification to admin
-    // TODO: Send confirmation email to user
+    // Send email to admin
+    await sendEmail({
+      to: process.env.ADMIN_EMAIL!,
+      subject: `New Contact Request from ${name}`,
+      html: `
+        <h2>New Contact Request</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+        <p><strong>Service:</strong> ${service}</p>
+        <p><strong>Message:</strong><br/>${message}</p>
+      `,
+    });
 
-    return NextResponse.json(contactRequest)
-  } catch (error) {
-    console.error("[CONTACT_POST]", error)
+    // Send confirmation email to user
+    await sendEmail({
+      to: email,
+      subject: "Thank you for contacting us!",
+      html: `
+        <p>Hi ${name},</p>
+        <p>Thank you for reaching out. We've received your request and will get back to you soon.</p>
+        <p><strong>Your Message:</strong><br/>${message}</p>
+        <p>— The Team</p>
+      `,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("[CONTACT_POST]", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
-    )
+    );
   }
 }

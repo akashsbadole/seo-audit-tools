@@ -30,9 +30,9 @@ export default function Home() {
       <HeroSection />
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="text-3xl font-bold mb-4 text-black">
             Complete Website Optimization Platform
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -41,7 +41,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 hidden">
           <Card className="text-center">
             <CardHeader>
               <BarChart3 className="h-12 w-12 mx-auto text-blue-500 mb-4" />
@@ -95,7 +95,7 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="text-center">
+        <div className="text-center hidden">
           <Link href="/dashboard">
             <Button size="lg" className="mr-4">
               View Dashboard
