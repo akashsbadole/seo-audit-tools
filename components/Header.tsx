@@ -21,14 +21,17 @@ const ToolItem = ({
   href,
   label,
   icon: Icon,
+  closeMenu,
 }: {
   href: string;
   label: string;
   icon?: React.ReactNode;
+  closeMenu?: () => void;
 }) => (
   <Link
     href={href}
     className="flex items-start gap-2 p-2 rounded hover:bg-indigo-100 transition-colors"
+    onClick={typeof closeMenu === "function" ? closeMenu : undefined}
   >
     {Icon && <span className="text-indigo-600">{Icon}</span>}
     <span className="text-sm text-white font-medium">{label}</span>
@@ -142,10 +145,7 @@ const DropdownMenu = () => {
                           href="/tools/robots-txt"
                           label="Robots.txt Generator"
                         />
-                        <ToolItem
-                          href="/tools/robots-txt-generator"
-                          label="Robots.txt Generator"
-                        />
+
                         <ToolItem
                           href="/tools/sitemap"
                           label="Sitemap Generator"
@@ -225,17 +225,31 @@ const DropdownMenu = () => {
         <div className="md:hidden bg-indigo-800 text-white px-4 pb-4">
           <div className="py-2">
             <p className="font-bold text-sm text-indigo-200 mb-2">SEO Tools</p>
-            <ToolItem href="/keyword-research" label="Keyword Research Tool" />
-            <ToolItem href="/meta-tags-generator" label="Meta Tags Generator" />
+            <ToolItem
+              href="/keyword-research"
+              label="Keyword Research Tool"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
+            <ToolItem
+              href="/meta-tags-generator"
+              label="Meta Tags Generator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
             <ToolItem
               href="/open-graph-generator"
               label="Open Graph Generator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
             <ToolItem
               href="/campaign-url-builder"
               label="Campaign URL Builder"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
-            <ToolItem href="/tools/seo-score" label="SEO Score Calculator" />
+            <ToolItem
+              href="/tools/seo-score"
+              label="SEO Score Calculator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
 
             <p className="font-bold text-sm text-indigo-200 mt-4 mb-2">
               Content Tools
@@ -243,45 +257,77 @@ const DropdownMenu = () => {
             <ToolItem
               href="/tools/readability"
               label="Content Readability Score"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
-            <ToolItem href="/tools/title-preview" label="Title Tag Preview" />
+            <ToolItem
+              href="/tools/title-preview"
+              label="Title Tag Preview"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
             <ToolItem
               href="/tools/description-preview"
               label="Description Tag Preview"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
             <ToolItem
               href="/tools/structured-data"
               label="Structured Data Validator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
             <ToolItem
               href="/tools/canonical-url"
               label="Canonical URL Checker"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
 
             <p className="font-bold text-sm text-indigo-200 mt-4 mb-2">
               Technical Tools
             </p>
-            <ToolItem href="/tools/meta-tags" label="Meta Tags Generator" />
+            <ToolItem
+              href="/tools/meta-tags"
+              label="Meta Tags Generator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
             <ToolItem
               href="/tools/keyword-density"
               label="Keyword Density Analyzer"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
-            <ToolItem href="/tools/header-tags" label="Header Tag Checker" />
+            <ToolItem
+              href="/tools/header-tags"
+              label="Header Tag Checker"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
             <ToolItem
               href="/tools/internal-links"
               label="Internal Linking Analyzer"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
-            <ToolItem href="/tools/alt-text" label="Image Alt Text Checker" />
-            <ToolItem href="/tools/broken-links" label="Broken Link Finder" />
-            <ToolItem href="/tools/robots-txt" label="Robots.txt Generator" />
             <ToolItem
-              href="/tools/robots-txt-generator"
-              label="Robots.txt Generator"
+              href="/tools/alt-text"
+              label="Image Alt Text Checker"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
-            <ToolItem href="/tools/sitemap" label="Sitemap Generator" />
+            <ToolItem
+              href="/tools/broken-links"
+              label="Broken Link Finder"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
+            <ToolItem
+              href="/tools/robots-txt"
+              label="Robots.txt Generator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
+
+            <ToolItem
+              href="/tools/sitemap"
+              label="Sitemap Generator"
+              closeMenu={() => setIsMobileMenuOpen(false)}
+            />
             <ToolItem
               href="/tools/mobile-friendly"
               label="Mobile-Friendliness Tester"
+              closeMenu={() => setIsMobileMenuOpen(false)}
             />
           </div>
           <Link href="#about" className="block py-2 text-sm text-indigo-200">
