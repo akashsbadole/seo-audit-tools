@@ -193,21 +193,32 @@ function KeywordResearchContent() {
           }),
         });
 
-        const responseData = await saveResponse.json();
+        // Only try to parse JSON if response is ok and has content
+        let responseData = null;
+        let text = "";
+        try {
+          text = await saveResponse.text();
+          if (text) {
+            responseData = JSON.parse(text);
+          }
+        } catch (e) {
+          // Ignore JSON parse errors, just log raw text
+        }
 
         if (!saveResponse.ok) {
           console.error(
             "Failed to save keyword search:",
-            JSON.stringify(responseData, null, 2)
+            responseData ? JSON.stringify(responseData, null, 2) : text
           );
           throw new Error(
-            responseData.error || "Failed to save keyword search"
+            (responseData && responseData.error) ||
+              "Failed to save keyword search"
           );
         }
 
         console.log(
           "Successfully saved keyword search:",
-          JSON.stringify(responseData, null, 2)
+          responseData ? JSON.stringify(responseData, null, 2) : text
         );
       } catch (error) {
         console.error("Error saving keyword search:", error);
