@@ -9,6 +9,13 @@ import {
   NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from "lucide-react";
+import {
+  SignedIn,
+  SignedOut,
+  UserButton,
+  SignInButton,
+  SignOutButton,
+} from "@clerk/nextjs";
 
 const ToolItem = ({
   href,
@@ -24,7 +31,7 @@ const ToolItem = ({
     className="flex items-start gap-2 p-2 rounded hover:bg-indigo-100 transition-colors"
   >
     {Icon && <span className="text-indigo-600">{Icon}</span>}
-    <span className="text-sm text-indigo-900 font-medium">{label}</span>
+    <span className="text-sm text-white font-medium">{label}</span>
   </Link>
 );
 
@@ -168,15 +175,48 @@ const DropdownMenu = () => {
           )}
         </button>
         <nav className="hidden md:flex gap-6 items-center">
-          <Link href="#about" className="text-sm hover:text-indigo-300">
+          <Link href="/about" className="block py-2 text-sm text-indigo-200">
             About
           </Link>
           <Link
-            href="/login"
-            className="text-sm bg-white text-indigo-900 px-3 py-1 rounded hover:bg-indigo-200"
+            href="/keyword-research"
+            className="block py-2 text-sm text-indigo-200"
           >
-            Login
+            Keyword Research Tool
           </Link>
+          <Link
+            href="/meta-tags-generator"
+            className="block py-2 text-sm text-indigo-200"
+          >
+            Meta Tags Generator
+          </Link>
+          <Link
+            href="/open-graph-generator"
+            className="block py-2 text-sm text-indigo-200"
+          >
+            Open Graph Generator
+          </Link>
+          <Link
+            href="/campaign-url-builder"
+            className="block py-2 text-sm text-indigo-200"
+          >
+            Campaign URL Builder
+          </Link>
+          <SignedOut>
+            <SignInButton>
+              <button className="text-sm bg-white text-indigo-900 px-3 py-1 rounded hover:bg-indigo-200">
+                Login
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <SignOutButton>
+              <button className="text-sm bg-white text-indigo-900 px-3 py-1 rounded hover:bg-indigo-200">
+                Logout
+              </button>
+            </SignOutButton>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </nav>
       </div>
 
@@ -247,12 +287,23 @@ const DropdownMenu = () => {
           <Link href="#about" className="block py-2 text-sm text-indigo-200">
             About
           </Link>
-          <Link
-            href="/login"
-            className="block py-2 text-sm bg-white text-indigo-900 mt-2 rounded text-center"
-          >
-            Login
-          </Link>
+          <SignedOut>
+            <SignInButton>
+              <button className="block py-2 text-sm bg-white text-indigo-900 mt-2 rounded text-center">
+                Login
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <SignOutButton>
+              <button className="block py-2 text-sm bg-white text-indigo-900 mt-2 rounded text-center">
+                Logout
+              </button>
+            </SignOutButton>
+            <div className="flex justify-center mt-2">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          </SignedIn>
         </div>
       )}
     </header>
