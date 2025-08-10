@@ -30,11 +30,11 @@ const ToolItem = ({
 }) => (
   <Link
     href={href}
-    className="flex items-start gap-2 p-2 rounded hover:bg-indigo-100 transition-colors md:text-black xl:text-black"
+    className="flex items-start gap-2 p-2 rounded hover:bg-indigo-100 transition-colors"
     onClick={typeof closeMenu === "function" ? closeMenu : undefined}
   >
     {Icon && <span className="text-indigo-600">{Icon}</span>}
-    <span className="text-sm text-white font-medium">{label}</span>
+    <span className="text-sm text-white font-medium  md:text-black xl:text-black">{label}</span>
   </Link>
 );
 
