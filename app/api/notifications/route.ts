@@ -1,109 +1,91 @@
-import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateUser } from '@/lib/auth-helpers';
+import { prisma } from '@/lib/prisma';
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const auth = await authenticateUser(request);
+    
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    const { user } = auth;
 
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
+    // Get user's notifications
     const notifications = await prisma.notification.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { createdAt: "desc" },
+      where: {
+        userId: user.id
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit,
+      skip: offset,
     });
 
-    return NextResponse.json(notifications);
+    // Transform notifications to match frontend interface
+    const transformedNotifications = notifications.map(notification => ({
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      timestamp: notification.createdAt,
+      read: notification.read,
+      action: notification.actionUrl ? {
+        label: notification.actionLabel || 'View Details',
+        url: notification.actionUrl
+      } : undefined,
+      category: notification.category
+    }));
+
+    return NextResponse.json(transformedNotifications);
   } catch (error) {
-    console.error("[NOTIFICATIONS_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('Notifications API error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch notifications' },
+      { status: 500 }
+    );
   }
 }
 
-export async function PATCH(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const auth = await authenticateUser(request);
+    
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const body = await req.json();
-    const { id, read } = body;
+    const { user } = auth;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
+    const body = await request.json();
+    const { type, title, message, category, actionUrl, actionLabel } = body;
+
+    // Create new notification
+    const notification = await prisma.notification.create({
+      data: {
+        type,
+        title,
+        message,
+        category,
+        actionUrl,
+        actionLabel,
+        read: false,
+        userId: user.id
+      }
     });
 
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const notification = await prisma.notification.findUnique({
-      where: { id },
-    });
-
-    if (!notification || notification.userId !== dbUser.id) {
-      return new NextResponse("Notification not found", { status: 404 });
-    }
-
-    const updatedNotification = await prisma.notification.update({
-      where: { id },
-      data: { read },
-    });
-
-    return NextResponse.json(updatedNotification);
+    return NextResponse.json({ success: true, notification });
   } catch (error) {
-    console.error("[NOTIFICATIONS_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error('Create notification error:', error);
+    return NextResponse.json(
+      { error: 'Failed to create notification' },
+      { status: 500 }
+    );
   }
 }
-
-export async function DELETE(req: Request) {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return new NextResponse("Notification ID is required", { status: 400 });
-    }
-
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
-
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const notification = await prisma.notification.findUnique({
-      where: { id },
-    });
-
-    if (!notification || notification.userId !== dbUser.id) {
-      return new NextResponse("Notification not found", { status: 404 });
-    }
-
-    await prisma.notification.delete({
-      where: { id },
-    });
-
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    console.error("[NOTIFICATIONS_DELETE]", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
-} 

@@ -40,7 +40,7 @@ export function KeywordDensityAnalyzer() {
       }
 
       const result = await response.json();
-      setResults(result.result.keywords);
+      setResults(result.keywords);
       toast.success("Analysis complete!");
     } catch (error) {
       toast.error("An error occurred while analyzing keyword density");

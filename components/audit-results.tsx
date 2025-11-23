@@ -36,7 +36,7 @@ import type { SEOAuditResult, PDFExportOptions } from "@/types/seo-audit";
 // import { SEOMetaTags } from "@/components/seo-meta-tags"
 
 export function AuditResults({ url }: { url: string }) {
-  const [auditResult, setAuditResult] = useState<SEOAuditResult | null>(null);
+  const [auditResult, setAuditResult] = useState<SeoauditResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -96,12 +96,14 @@ export function AuditResults({ url }: { url: string }) {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || `HTTP error! status: ${response.status}`);
+          throw new Error(
+            data.error || `HTTP error! status: ${response.status}`
+          );
         }
 
         // Check if we got a valid audit result
-        if (!data || typeof data.overallScore === 'undefined') {
-          throw new Error('Invalid audit result received');
+        if (!data || typeof data.overallScore === "undefined") {
+          throw new Error("Invalid audit result received");
         }
 
         setAuditResult(data);
@@ -116,10 +118,13 @@ export function AuditResults({ url }: { url: string }) {
         );
 
         // Only retry for certain errors
-        if (retryCount < MAX_RETRIES && error instanceof Error && 
-            (error.message.includes('timeout') || 
-             error.message.includes('network') ||
-             error.message.includes('failed to fetch'))) {
+        if (
+          retryCount < MAX_RETRIES &&
+          error instanceof Error &&
+          (error.message.includes("timeout") ||
+            error.message.includes("network") ||
+            error.message.includes("failed to fetch"))
+        ) {
           setRetryCount((prev) => prev + 1);
           setRetryTime(RETRY_DELAY / 1000);
 

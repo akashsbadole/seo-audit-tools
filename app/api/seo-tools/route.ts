@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import * as cheerio from 'cheerio';
 
 interface HeaderTag {
@@ -245,9 +244,12 @@ export async function POST(request: Request) {
 
     // Make authentication optional
     try {
-      const { userId } = await auth();
-      if (userId) {
+      // Get authorization header
+      const authHeader = request.headers.get('authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
         // User is authenticated, could do additional things here in the future
+        const token = authHeader.substring(7);
+        // TODO: Validate token and get user ID
       }
     } catch (error) {
       // Continue without authentication

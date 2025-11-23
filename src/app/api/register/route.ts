@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, clerkId } = body;
+    const { email, password, name } = body;
 
-    if (!email || !clerkId) {
+    if (!email || !password) {
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 }
@@ -27,16 +29,35 @@ export async function POST(request: Request) {
       );
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     // Create user
     const user = await prisma.user.create({
       data: {
         email,
-        clerkId,
+        password: hashedPassword,
+        name: name || null,
       },
     });
 
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+
     return NextResponse.json(
-      { message: "User created successfully" },
+      {
+        message: "User created successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        token
+      },
       { status: 201 }
     );
   } catch (error) {

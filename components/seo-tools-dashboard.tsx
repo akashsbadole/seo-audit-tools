@@ -24,7 +24,7 @@ import {
   Smartphone,
   LogOut,
 } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+import { useAuth } from "@/contexts/auth-context";
 
 interface ToolCard {
   title: string;
@@ -127,7 +127,7 @@ const tools: ToolCard[] = [
 ];
 
 export function SEOToolsDashboard() {
-  const { signOut } = useClerk();
+  const { logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -136,7 +136,7 @@ export function SEOToolsDashboard() {
           <div className="flex h-16 items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
             <button
-              onClick={() => signOut()}
+              onClick={logout}
               className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
             >
               <LogOut className="h-4 w-4" />

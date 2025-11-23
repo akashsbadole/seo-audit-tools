@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -19,9 +21,11 @@ import {
   Code,
 } from "lucide-react";
 import Link from "next/link";
-import { SignInButton } from "@clerk/nextjs";
+import { useAuth } from "@/contexts/auth-context";
 
 export function PremiumFeatures() {
+  const { user } = useAuth();
+  
   const features = [
     {
       title: "Advanced SEO Analysis",
@@ -140,8 +144,17 @@ export function PremiumFeatures() {
 
       <div className="text-center mt-4">
         <p className="text-sm text-white mt-4">
-          All tools require login. Login for unlimited access and advanced
-          features.
+          All tools require login. {user ? (
+            user.isPremium ? "You have premium access!" : (
+              <Link href="/upgrade" className="text-yellow-300 hover:underline">
+                Upgrade to premium for unlimited access and advanced features.
+              </Link>
+            )
+          ) : (
+            <Link href="/login" className="text-yellow-300 hover:underline">
+              Login for unlimited access and advanced features.
+            </Link>
+          )}
         </p>
       </div>
     </div>

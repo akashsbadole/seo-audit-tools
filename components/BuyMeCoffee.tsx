@@ -1,3 +1,5 @@
+"use client";
+
 import { Coffee } from "lucide-react";
 
 interface BuyMeCoffeeProps {

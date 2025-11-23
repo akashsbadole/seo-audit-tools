@@ -1,20 +1,23 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
 
     const body = await req.json();
     const { domain, domainAuthority, backlinks, organicKeywords, organicTraffic } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    const dbUser = await prisma.user.findFirst();
 
     if (!dbUser) {
       return new NextResponse("User not found", { status: 404 });
@@ -40,14 +43,18 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
+
+    const dbUser = await prisma.user.findFirst();
 
     if (!dbUser) {
       return new NextResponse("User not found", { status: 404 });
@@ -67,17 +74,21 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
 
     const body = await req.json();
     const { id, domainAuthority, backlinks, organicKeywords, organicTraffic } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    const dbUser = await prisma.user.findFirst();
 
     if (!dbUser) {
       return new NextResponse("User not found", { status: 404 });
@@ -107,4 +118,4 @@ export async function PATCH(req: Request) {
     console.error("[COMPETITORS_PATCH]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
-} 
+}

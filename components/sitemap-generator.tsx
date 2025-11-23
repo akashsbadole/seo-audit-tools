@@ -51,29 +51,31 @@ export function SitemapGenerator() {
         throw new Error(data.error || "Failed to generate sitemap");
       }
 
-      if (data.result?.content) {
+      if (data?.content) {
         // Create blob and download link
-        const blob = new Blob([data.result.content], { type: 'application/xml' });
+        const blob = new Blob([data.content], { type: "application/xml" });
         const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = 'sitemap.xml';
+        link.download = "sitemap.xml";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
 
         toast.success(
-          data.result.source === 'existing_sitemap' 
-            ? "Found and downloaded existing sitemap!" 
-            : `Generated and downloaded sitemap with ${data.result.urlCount} URLs`
+          data.source === "existing_sitemap"
+            ? "Found and downloaded existing sitemap!"
+            : `Generated and downloaded sitemap with ${data.urlCount} URLs`
         );
       } else {
         throw new Error("No sitemap content received");
       }
     } catch (error) {
       console.error("Sitemap generation error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate sitemap");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to generate sitemap"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +119,6 @@ export function SitemapGenerator() {
       description="Generate and download an XML sitemap for your website"
       toolType="SITEMAP"
       onSubmit={generateSitemap}
-      isLoading={isLoading}
     >
       <div className="mt-8 space-y-6">
         <div>

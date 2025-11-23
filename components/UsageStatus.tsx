@@ -1,5 +1,8 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
+import { useAuth } from "@/contexts/auth-context";
 
 interface UsageStatus {
   freeReportsUsed: number;
@@ -8,16 +11,21 @@ interface UsageStatus {
 }
 
 export function UsageStatus() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const [usage, setUsage] = useState<UsageStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUsage() {
-      if (!session?.user?.email) return;
+      if (!user?.email) return;
 
       try {
-        const response = await fetch("/api/usage");
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch("/api/usage", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const data = await response.json();
         setUsage(data);
       } catch (error) {
@@ -28,9 +36,9 @@ export function UsageStatus() {
     }
 
     fetchUsage();
-  }, [session]);
+  }, [user]);
 
-  if (!session) {
+  if (!user) {
     return null;
   }
 
@@ -73,7 +81,6 @@ export function UsageStatus() {
           <Button
             className="w-full mt-4 bg-blue-600 hover:bg-blue-700"
             onClick={() => {
-              // TODO: Implement premium upgrade flow
               window.location.href = "/upgrade";
             }}
           >

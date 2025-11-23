@@ -3,11 +3,11 @@ import { ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState } from "react";
-import { useUser, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@/contexts/auth-context";
 
 export function HeroSection() {
   const [isOpen, setIsOpen] = useState(false);
-  const { isSignedIn } = useUser();
+  const { user } = useAuth();
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
     targetId: string
@@ -45,19 +45,19 @@ export function HeroSection() {
             </Button>
           </Link>
 
-          {/* Clerk Auth Buttons */}
-          {!isSignedIn && (
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4 hidden">
-              <SignInButton mode="modal">
+          {/* Custom Auth Buttons */}
+          {!user && (
+            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
+              <Link href="/login">
                 <Button variant="outline" className="w-40">
                   Login
                 </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
+              </Link>
+              <Link href="/signup">
                 <Button className="w-40 bg-indigo-700 text-white hover:bg-indigo-800">
                   Sign Up
                 </Button>
-              </SignUpButton>
+              </Link>
             </div>
           )}
 

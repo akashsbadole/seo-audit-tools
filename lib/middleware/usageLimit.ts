@@ -1,19 +1,45 @@
-import { NextResponse } from 'next/server';
-import { currentUser } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+import prisma from '@/lib/prisma';
 
 const FREE_REPORT_LIMIT = 10;
 const FREE_SEARCH_LIMIT = 10;
 
-export async function checkUsageLimit(type: 'report' | 'search') {
-  const user = await currentUser();
+function getUserFromRequest(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
   
-  if (!user?.id) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7);
+  const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function checkUsageLimit(type: 'report' | 'search', request?: NextRequest) {
+  // For backward compatibility, try to get user from request first
+  let user = null;
+  
+  if (request) {
+    user = getUserFromRequest(request);
+  }
+  
+  // If no user from request, this might be called from a server component
+  // In that case, we'll need to handle it differently
+  
+  if (!user?.userId) {
     return { allowed: false, message: 'Authentication required' };
   }
 
   const dbUser = await prisma.user.findUnique({
-    where: { id: user.id },
+    where: { id: user.userId },
     include: { usage: true }
   });
 

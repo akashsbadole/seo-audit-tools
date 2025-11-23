@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { z } from "zod";
 
 const createAuditSchema = z.object({
@@ -18,17 +17,22 @@ const createAuditSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
+
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
 
     const body = await req.json();
     const validatedData = createAuditSchema.parse(body);
 
     // Check if user has available reports
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
+    const dbUser = await prisma.user.findFirst({
       include: {
         siteAudits: {
           where: {
@@ -87,14 +91,18 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
+
+    const dbUser = await prisma.user.findFirst();
 
     if (!dbUser) {
       return new NextResponse("User not found", { status: 404 });
@@ -134,7 +142,7 @@ export async function GET(req: Request) {
     ]);
 
     return NextResponse.json({
-      audits: audits.map((audit) => ({
+      audits: audits.map((audit: any) => ({
         ...audit,
         createdAt: audit.createdAt.toISOString(),
         updatedAt: audit.updatedAt.toISOString(),

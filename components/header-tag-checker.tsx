@@ -32,7 +32,7 @@ export function HeaderTagChecker() {
       }
 
       const data = await response.json();
-      setResults(data.result.headers || []);
+      setResults(data.headers || []);
     } catch (error) {
       toast.error("Failed to analyze header tags");
       console.error(error);

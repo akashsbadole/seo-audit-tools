@@ -1,21 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import jwt from 'jsonwebtoken'
+import prisma from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7);
+    
+    // Validate token and get user ID
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
+    } catch (jwtError) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const userId = decoded.userId;
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     // Get user's recent audits
     const recentAudits = await prisma.siteAudit.findMany({
       where: {
-        userId: userId
+        userId: dbUser.id
       },
       orderBy: {
         createdAt: 'desc'
@@ -67,7 +83,7 @@ export async function GET(request: NextRequest) {
     // Get total audit count
     const totalAudits = await prisma.siteAudit.count({
       where: {
-        userId: userId
+        userId: dbUser.id
       }
     })
 
@@ -75,7 +91,7 @@ export async function GET(request: NextRequest) {
     const activeIssues = await prisma.auditIssue.count({
       where: {
         audit: {
-          userId: userId
+          userId: dbUser.id
         },
         isFixed: false
       }
@@ -84,7 +100,7 @@ export async function GET(request: NextRequest) {
     const resolvedIssues = await prisma.auditIssue.count({
       where: {
         audit: {
-          userId: userId
+          userId: dbUser.id
         },
         isFixed: true
       }
@@ -93,7 +109,7 @@ export async function GET(request: NextRequest) {
     // Get keyword tracking data
     const keywordRankings = await prisma.keywordTracking.findMany({
       where: {
-        userId: userId,
+        userId: dbUser.id,
         isTracking: true
       },
       orderBy: {

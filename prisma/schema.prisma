@@ -5,24 +5,34 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id                  String               @id(map: "User_new_pkey") @default(cuid())
+  id                  String               @id @default(cuid())
   name                String?
   email               String?              @unique
+  password            String?
   emailVerified       DateTime?
   image               String?
   isPremium           Boolean              @default(false)
+  role                UserRole             @default(USER)
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
-  clerkId             String?              @unique
+  whiteLabelSettings   WhiteLabelSettings?
   SEOToolResult       SEOToolResult[]
   siteAudits          SiteAudit[]
   keywordTracking     KeywordTracking[]
   competitorAnalysis  CompetitorAnalysis[]
+  backlinkAnalyses    BacklinkAnalysis[]
+  keywordResearch     KeywordResearch[]
+  serpAnalyses        SerpAnalysis[]
+  contentAnalyses     ContentAnalysis[]
+  positionTracking    PositionTracking[]
+  domainOverviews     DomainOverview[]
+  topicResearch       TopicResearch[]
+  notifications       Notification[]
 }
 
 model ServiceRequest {
@@ -156,6 +166,8 @@ model VerificationToken {
 }
 
 enum UserRole {
+  ADMIN
+  USER
   FREELANCER
   CLIENT
 }
@@ -202,6 +214,26 @@ enum SEOToolType {
   ACCESSIBILITY_AUDIT
   PERFORMANCE_AUDIT
   COMPETITOR_ANALYSIS
+  DOMAIN_OVERVIEW
+  ORGANIC_RESEARCH
+  KEYWORD_GAP
+  BACKLINK_GAP
+  KEYWORD_RESEARCH
+  KEYWORD_OVERVIEW
+  KEYWORD_MAGIC_TOOL
+  KEYWORD_STRATEGY_BUILDER
+  POSITION_TRACKING
+  ORGANIC_TRAFFIC_INSIGHTS
+  BACKLINK_ANALYTICS
+  BACKLINK_AUDIT
+  LINK_BUILDING_TOOL
+  BULK_ANALYSIS
+  ON_PAGE_SEO_CHECKER
+  LOG_FILE_ANALYZER
+  CONTENT_IDEAS
+  SEO_WRITING_ASSISTANT
+  TOPIC_RESEARCH
+  SEO_CONTENT_TEMPLATE
 }
 
 model SiteAudit {
@@ -345,4 +377,242 @@ enum ReportFormat {
   CSV
   JSON
   HTML
+}
+
+// Advanced SEO Analysis Models
+model BacklinkAnalysis {
+  id               String   @id @default(cuid())
+  userId           String
+  domain           String
+  backlinks        Backlink[]
+  referringDomains Int      @default(0)
+  domainAuthority  Float?
+  spamScore        Float?   @default(0)
+  newBacklinks     Int      @default(0)
+  lostBacklinks    Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([domain])
+}
+
+model Backlink {
+  id                   String          @id @default(cuid())
+  backlinkAnalysisId   String
+  sourceUrl            String
+  sourceDomain         String
+  sourceTitle          String?
+  targetUrl            String
+  anchorText           String?
+  linkType             LinkType        @default(TEXT)
+  isDofollow           Boolean         @default(true)
+  domainAuthority      Float?
+  pageAuthority        Float?
+  spamScore            Float?          @default(0)
+  firstSeen            DateTime        @default(now())
+  lastSeen             DateTime        @default(now())
+  status               BacklinkStatus  @default(ACTIVE)
+  backlinkAnalysis     BacklinkAnalysis @relation(fields: [backlinkAnalysisId], references: [id], onDelete: Cascade)
+
+  @@index([backlinkAnalysisId])
+  @@index([sourceDomain])
+  @@index([status])
+}
+
+model KeywordResearch {
+  id            String   @id @default(cuid())
+  userId        String
+  keyword       String
+  searchVolume  Int?
+  difficulty    Int?
+  cpc           Float?
+  competition   CompetitionLevel?
+  trend         Json?    // Monthly search trend data
+  relatedKeywords Json?  // Array of related keywords
+  serpFeatures  Json?    // SERP features for this keyword
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyword])
+}
+
+model SerpAnalysis {
+  id             String   @id @default(cuid())
+  userId         String
+  keyword        String
+  searchEngine   String   @default("google")
+  location       String   @default("us")
+  language       String   @default("en")
+  results        Json     // SERP results with positions, titles, descriptions
+  serpFeatures   Json?    // Featured snippets, ads, etc.
+  topCompetitors Json?    // Analysis of top ranking domains
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyword])
+}
+
+model ContentAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  url             String
+  title           String?
+  wordCount       Int?
+  readabilityScore Float?
+  keywordDensity  Json?    // Keyword density analysis
+  sentimentScore  Float?
+  topicRelevance  Json?    // Topic relevance analysis
+  contentQuality  Json?    // Overall content quality metrics
+  recommendations Json?    // Optimization suggestions
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([url])
+}
+
+model PositionTracking {
+  id              String   @id @default(cuid())
+  userId          String
+  keyword         String
+  targetUrl       String?
+  searchEngine    String   @default("google")
+  location        String   @default("us")
+  device          Device   @default(DESKTOP)
+  currentRank     Int?
+  previousRank    Int?
+  rankHistory     Json?    // Historical ranking data
+  searchVolume    Int?
+  difficulty      Int?
+  urlCount        Int?     // Number of URLs tracking for this keyword
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyword])
+  @@index([targetUrl])
+}
+
+model DomainOverview {
+  id                  String   @id @default(cuid())
+  userId              String
+  domain              String
+  domainAge           Int?
+  domainAuthority     Float?
+  pageAuthority       Float?
+  spamScore           Float?
+  backlinkCount       Int?
+  referringDomains    Int?
+  organicKeywords     Int?
+  organicTraffic      Int?
+  paidKeywords        Int?
+  paidTraffic         Int?
+  topPages            Json?    // Top performing pages
+  topKeywords         Json?    // Top ranking keywords
+  competitorData      Json?    // Competitor comparison data
+  technicalSeo        Json?    // Technical SEO metrics
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([domain])
+}
+
+model TopicResearch {
+  id            String   @id @default(cuid())
+  userId        String
+  topic         String
+  searchVolume  Int?
+  difficulty    Float?
+  relevanceScore Float?
+  relatedTopics Json?    // Related topic suggestions
+  questions     Json?    // Popular questions about the topic
+  subtopics     Json?    // Subtopic breakdown
+  contentGap    Json?    // Content gap analysis
+  serpIntent    String?  // Search intent classification
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([topic])
+}
+
+
+// Enums for new models
+enum LinkType {
+  TEXT
+  IMAGE
+  REDIRECT
+  JAVASCRIPT
+}
+
+enum BacklinkStatus {
+  ACTIVE
+  LOST
+  BROKEN
+  DISAVOWED
+}
+
+enum CompetitionLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Device {
+  DESKTOP
+  MOBILE
+  TABLET
+}
+
+model WhiteLabelSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  companyName       String?
+  logo              String?  // Base64 encoded image or URL
+  brandColor        String?  @default("#1a365d")
+  removeBranding    Boolean  @default(false)
+  contactEmail      String?
+  contactPhone      String?
+  contactWebsite    String?
+  footerText        String?
+  defaultReportTitle String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  SYSTEM
 }

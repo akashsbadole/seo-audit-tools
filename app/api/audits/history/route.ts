@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+
+// Helper function to verify JWT token
+function verifyToken(request: NextRequest) {
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null
+  }
+  
+  const token = authHeader.substring(7)
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
+  } catch {
+    return null
+  }
+}
 
 interface AuditWithRelations {
   id: string;
@@ -25,15 +40,15 @@ interface AuditWithRelations {
   }[];
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const tokenPayload = verifyToken(request)
+    if (!tokenPayload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const dbUser = await prisma.user.findUnique({
-      where: { clerkId: userId },
+      where: { id: tokenPayload.userId },
     });
 
     if (!dbUser) {

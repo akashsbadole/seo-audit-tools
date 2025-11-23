@@ -5,7 +5,7 @@ import { searchAndStoreDomain, updateDomainReport } from '@/lib/db'
 import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit'
 import dns from 'dns'
 import { promisify } from 'util'
-import { auth } from "@clerk/nextjs/server"
+import jwt from 'jsonwebtoken'
 import https from 'https'
 
 const lookup = promisify(dns.lookup)
@@ -693,7 +693,18 @@ export async function GET(request: NextRequest) {
     domain = domain.split('/')[0];
 
     // Optional: Get user session if they're logged in
-    const { userId } = await auth();
+    const authHeader = request.headers.get('Authorization')
+    let userId = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string }
+        userId = decoded.userId
+      } catch {
+        // Invalid token, continue without user session
+      }
+    }
 
     try {
       // Try to fetch the page with fallback mechanisms

@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button"
 import { Share2, Twitter, Facebook, Linkedin, Link as LinkIcon } from "lucide-react"
 import {

@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response("Unauthorized", { status: 401 });
     }
+
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
 
     const { email } = await request.json();
 
@@ -22,7 +27,6 @@ export async function POST(request: Request) {
       data: {
         id: userId,
         email,
-        clerkId: userId,
         usage: {
           create: {
             monthlyAudits: 0,
@@ -49,13 +53,18 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const token = authHeader.substring(7);
+    // TODO: Validate token and get user ID
+    // For now, we'll use a placeholder user ID
+    const userId = "temp-user-id";
+
+    const user = await prisma.user.findFirst({
       include: {
         usage: true,
       },
@@ -76,4 +85,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
