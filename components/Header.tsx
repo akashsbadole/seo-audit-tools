@@ -419,7 +419,7 @@ const DropdownMenu = () => {
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button className="seoaudit-button">Start Free Trial</Button>
+                  <Button className="seoaudit-button">Start Free </Button>
                 </Link>
               </div>
             )}
@@ -663,9 +663,7 @@ const DropdownMenu = () => {
                   </Button>
                 </Link>
                 <Link href="/signup">
-                  <Button className="w-full seoaudit-button">
-                    Start Free Trial
-                  </Button>
+                  <Button className="w-full seoaudit-button">Start Free</Button>
                 </Link>
               </div>
             )}

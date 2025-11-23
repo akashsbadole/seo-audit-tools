@@ -178,7 +178,7 @@ export function SeoauditHeroSection() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500">
-                  No credit card required • Free 7-day trial
+                  No credit card required • Free 7-day
                 </p>
               </div>
             </form>
@@ -187,7 +187,7 @@ export function SeoauditHeroSection() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/signup">
                 <Button size="lg" className="seoaudit-button">
-                  Start Free Trial
+                  Start Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>

@@ -227,7 +227,7 @@ export function SeoauditFeatures() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
                 <Button size="lg" className="seoaudit-button">
-                  Start Your Free Trial
+                  Start Your Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -242,7 +242,7 @@ export function SeoauditFeatures() {
               </Link>
             </div>
             <p className="text-sm text-gray-500 mt-4">
-              No credit card required • 7-day free trial
+              No credit card required • 7-day free
             </p>
           </div>
         </div>

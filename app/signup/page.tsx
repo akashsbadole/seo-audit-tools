@@ -81,7 +81,7 @@ export default function SignupPage() {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Start your free trial
+              Start your free
             </h2>
             <p className="text-gray-600">
               Get instant access to all SEO tools. No credit card required.
@@ -152,7 +152,7 @@ export default function SignupPage() {
               className="w-full seoaudit-button"
               disabled={isLoading}
             >
-              {isLoading ? "Creating account..." : "Start Free Trial"}
+              {isLoading ? "Creating account..." : "Start Free  "}
             </Button>
           </form>
 
@@ -172,7 +172,7 @@ export default function SignupPage() {
         {/* Features list */}
         <div className="mt-8 bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="font-semibold text-gray-900 mb-4 text-center">
-            What you get with your free trial:
+            What you get with your free :
           </h3>
           <div className="space-y-3">
             <div className="flex items-start">
@@ -204,7 +204,7 @@ export default function SignupPage() {
                 />
               </svg>
               <span className="text-sm text-gray-700">
-                7-day free trial, no credit card required
+                7-day free , no credit card required
               </span>
             </div>
             <div className="flex items-start">

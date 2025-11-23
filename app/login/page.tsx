@@ -154,7 +154,7 @@ export default function LoginPage() {
                 href="/signup"
                 className="font-medium text-[hsl(var(--seoaudit-orange))] hover:underline"
               >
-                Start your free trial
+                Start your free
               </Link>
             </p>
           </div>

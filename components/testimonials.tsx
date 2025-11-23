@@ -17,7 +17,8 @@ const Testimonials = () => {
       company: "TechStart Inc.",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "This SEO audit platform has transformed how we approach our digital marketing. The AI-powered insights are incredibly valuable, and we've seen a 40% increase in organic traffic in just 3 months.",
+      content:
+        "This SEO audit platform has transformed how we approach our digital marketing. The AI-powered insights are incredibly valuable, and we've seen a 40% increase in organic traffic in just 3 months.",
       results: "40% increase in organic traffic",
       plan: "Professional",
     },
@@ -28,7 +29,8 @@ const Testimonials = () => {
       company: "Digital Agency Pro",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "As an agency, we need reliable tools for multiple clients. The competitor analysis and website monitoring features are game-changers. Our clients love the detailed reports we can generate.",
+      content:
+        "As an agency, we need reliable tools for multiple clients. The competitor analysis and website monitoring features are game-changers. Our clients love the detailed reports we can generate.",
       results: "50+ clients managed",
       plan: "Enterprise",
     },
@@ -39,7 +41,8 @@ const Testimonials = () => {
       company: "Boutique Store",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "I was struggling with SEO until I found this platform. The free plan gave me everything I needed to get started, and the upgrade to Professional was worth every penny. My website now ranks on page 1!",
+      content:
+        "I was struggling with SEO until I found this platform. The free plan gave me everything I needed to get started, and the upgrade to Professional was worth every penny. My website now ranks on page 1!",
       results: "Page 1 rankings achieved",
       plan: "Professional",
     },
@@ -50,7 +53,8 @@ const Testimonials = () => {
       company: "Media Corp",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "The AI content analysis tool is phenomenal. It helps us optimize our articles before publishing, and the keyword suggestions are spot-on. Our content performance has improved dramatically.",
+      content:
+        "The AI content analysis tool is phenomenal. It helps us optimize our articles before publishing, and the keyword suggestions are spot-on. Our content performance has improved dramatically.",
       results: "60% better content engagement",
       plan: "Professional",
     },
@@ -61,7 +65,8 @@ const Testimonials = () => {
       company: "Online Store",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "The website monitoring feature alone is worth the subscription. We get instant alerts about any issues, and the SEO audit helps us stay ahead of competitors. Essential for any online business.",
+      content:
+        "The website monitoring feature alone is worth the subscription. We get instant alerts about any issues, and the SEO audit helps us stay ahead of competitors. Essential for any online business.",
       results: "99.9% uptime maintained",
       plan: "Premium",
     },
@@ -72,7 +77,8 @@ const Testimonials = () => {
       company: "SEO Consultant",
       avatar: "/placeholder-user.jpg",
       rating: 5,
-      content: "I've tried many SEO tools, but this one stands out. The interface is intuitive, the features are comprehensive, and the pricing is fair. My clients are impressed with the results we achieve together.",
+      content:
+        "I've tried many SEO tools, but this one stands out. The interface is intuitive, the features are comprehensive, and the pricing is fair. My clients are impressed with the results we achieve together.",
       results: "25+ successful projects",
       plan: "Professional",
     },
@@ -111,7 +117,8 @@ const Testimonials = () => {
             Loved by Thousands of Users
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            See what our customers have to say about their experience with our SEO audit platform.
+            See what our customers have to say about their experience with our
+            SEO audit platform.
           </p>
         </div>
 
@@ -145,15 +152,23 @@ const Testimonials = () => {
                   "{testimonials[activeTestimonial].content}"
                 </p>
                 <div>
-                  <div className="font-semibold text-lg">{testimonials[activeTestimonial].name}</div>
-                  <div className="text-gray-600">{testimonials[activeTestimonial].role}</div>
-                  <div className="text-gray-500 text-sm">{testimonials[activeTestimonial].company}</div>
+                  <div className="font-semibold text-lg">
+                    {testimonials[activeTestimonial].name}
+                  </div>
+                  <div className="text-gray-600">
+                    {testimonials[activeTestimonial].role}
+                  </div>
+                  <div className="text-gray-500 text-sm">
+                    {testimonials[activeTestimonial].company}
+                  </div>
                   <Badge className="mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                     {testimonials[activeTestimonial].plan} Plan
                   </Badge>
                 </div>
                 <div className="mt-4">
-                  <span className="text-green-600 font-semibold">✓ {testimonials[activeTestimonial].results}</span>
+                  <span className="text-green-600 font-semibold">
+                    ✓ {testimonials[activeTestimonial].results}
+                  </span>
                 </div>
               </div>
             </div>
@@ -179,7 +194,9 @@ const Testimonials = () => {
                     {testimonial.plan}
                   </Badge>
                 </div>
-                <p className="text-gray-700 mb-4 line-clamp-3">"{testimonial.content}"</p>
+                <p className="text-gray-700 mb-4 line-clamp-3">
+                  "{testimonial.content}"
+                </p>
                 <div className="flex items-center gap-3">
                   <img
                     src={testimonial.avatar}
@@ -187,13 +204,21 @@ const Testimonials = () => {
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div>
-                    <div className="font-semibold text-sm">{testimonial.name}</div>
-                    <div className="text-gray-600 text-xs">{testimonial.role}</div>
-                    <div className="text-gray-500 text-xs">{testimonial.company}</div>
+                    <div className="font-semibold text-sm">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-gray-600 text-xs">
+                      {testimonial.role}
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      {testimonial.company}
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-green-600 text-xs font-semibold">✓ {testimonial.results}</span>
+                  <span className="text-green-600 text-xs font-semibold">
+                    ✓ {testimonial.results}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -207,17 +232,18 @@ const Testimonials = () => {
               Ready to Join Thousands of Happy Users?
             </h3>
             <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-              Start your free trial today and see why our platform is the preferred choice for SEO professionals and businesses worldwide.
+              Start your free today and see why our platform is the preferred
+              choice for SEO professionals and businesses worldwide.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => window.location.href = "/sign-up"}
+                onClick={() => (window.location.href = "/sign-up")}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
               >
-                Start Free Trial
+                Start Free
               </button>
               <button
-                onClick={() => window.location.href = "#pricing"}
+                onClick={() => (window.location.href = "#pricing")}
                 className="px-8 py-3 border-2 border-blue-500 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-300"
               >
                 View Pricing

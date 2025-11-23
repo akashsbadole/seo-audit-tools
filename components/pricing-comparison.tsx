@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Star, Zap, Shield, Crown } from "lucide-react";
 import { GradientButton } from "./ui/gradient-button";
 
 const PricingComparison = () => {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "monthly"
+  );
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
   const plans = [
@@ -61,7 +70,7 @@ const PricingComparison = () => {
         { name: "Custom Reports", included: true },
         { name: "White Label Reports", included: false },
       ],
-      cta: "Start Free Trial",
+      cta: "Start Free  ",
       popular: true,
     },
     {
@@ -120,16 +129,23 @@ const PricingComparison = () => {
             Choose Your Perfect Plan
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Start free and upgrade as you grow. All plans include our core SEO tools with varying levels of advanced features.
+            Start free and upgrade as you grow. All plans include our core SEO
+            tools with varying levels of advanced features.
           </p>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-lg font-medium ${billingCycle === "monthly" ? "text-gray-900" : "text-gray-500"}`}>
+            <span
+              className={`text-lg font-medium ${billingCycle === "monthly" ? "text-gray-900" : "text-gray-500"}`}
+            >
               Monthly
             </span>
             <button
-              onClick={() => setBillingCycle(billingCycle === "monthly" ? "yearly" : "monthly")}
+              onClick={() =>
+                setBillingCycle(
+                  billingCycle === "monthly" ? "yearly" : "monthly"
+                )
+              }
               className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <span
@@ -138,9 +154,13 @@ const PricingComparison = () => {
                 }`}
               />
             </button>
-            <span className={`text-lg font-medium ${billingCycle === "yearly" ? "text-gray-900" : "text-gray-500"}`}>
+            <span
+              className={`text-lg font-medium ${billingCycle === "yearly" ? "text-gray-900" : "text-gray-500"}`}
+            >
               Yearly
-              <Badge className="ml-2 bg-green-100 text-green-800">Save 17%</Badge>
+              <Badge className="ml-2 bg-green-100 text-green-800">
+                Save 17%
+              </Badge>
             </span>
           </div>
         </div>
@@ -163,14 +183,22 @@ const PricingComparison = () => {
               )}
 
               <CardHeader className="text-center pb-8">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r ${plan.color} text-white mb-4`}>
+                <div
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r ${plan.color} text-white mb-4`}
+                >
                   {plan.icon}
                 </div>
-                <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                <CardDescription className="text-gray-600">{plan.description}</CardDescription>
+                <CardTitle className="text-2xl font-bold">
+                  {plan.name}
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  {plan.description}
+                </CardDescription>
                 <div className="mt-4">
                   <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-gray-600 ml-2">/{billingCycle === "monthly" ? "month" : "year"}</span>
+                  <span className="text-gray-600 ml-2">
+                    /{billingCycle === "monthly" ? "month" : "year"}
+                  </span>
                 </div>
               </CardHeader>
 
@@ -183,7 +211,9 @@ const PricingComparison = () => {
                       ) : (
                         <X className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
                       )}
-                      <span className={`text-sm ${feature.included ? "text-gray-700" : "text-gray-400"}`}>
+                      <span
+                        className={`text-sm ${feature.included ? "text-gray-700" : "text-gray-400"}`}
+                      >
                         {feature.name}
                       </span>
                     </li>
@@ -210,33 +240,88 @@ const PricingComparison = () => {
 
         {/* Feature Comparison Table */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-16">
-          <h3 className="text-2xl font-bold mb-8 text-center">Detailed Feature Comparison</h3>
+          <h3 className="text-2xl font-bold mb-8 text-center">
+            Detailed Feature Comparison
+          </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-4 px-6 font-semibold">Feature</th>
-                  <th className="text-center py-4 px-6 font-semibold">Starter</th>
-                  <th className="text-center py-4 px-6 font-semibold">Professional</th>
-                  <th className="text-center py-4 px-6 font-semibold">Enterprise</th>
+                  <th className="text-center py-4 px-6 font-semibold">
+                    Starter
+                  </th>
+                  <th className="text-center py-4 px-6 font-semibold">
+                    Professional
+                  </th>
+                  <th className="text-center py-4 px-6 font-semibold">
+                    Enterprise
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { feature: "SEO Audit", starter: "Basic", professional: "Advanced", enterprise: "Enterprise" },
-                  { feature: "Reports/Month", starter: "10", professional: "Unlimited", enterprise: "Unlimited" },
-                  { feature: "AI Analysis", starter: "5/month", professional: "Unlimited", enterprise: "Unlimited" },
-                  { feature: "Website Monitoring", starter: "3 sites", professional: "Unlimited", enterprise: "Unlimited" },
-                  { feature: "Competitor Analysis", starter: "❌", professional: "✅", enterprise: "✅" },
-                  { feature: "API Access", starter: "❌", professional: "✅", enterprise: "✅" },
-                  { feature: "Support", starter: "Email", professional: "Priority", enterprise: "Dedicated" },
-                  { feature: "Custom Reports", starter: "❌", professional: "✅", enterprise: "✅" },
-                  { feature: "White Label", starter: "❌", professional: "❌", enterprise: "✅" },
+                  {
+                    feature: "SEO Audit",
+                    starter: "Basic",
+                    professional: "Advanced",
+                    enterprise: "Enterprise",
+                  },
+                  {
+                    feature: "Reports/Month",
+                    starter: "10",
+                    professional: "Unlimited",
+                    enterprise: "Unlimited",
+                  },
+                  {
+                    feature: "AI Analysis",
+                    starter: "5/month",
+                    professional: "Unlimited",
+                    enterprise: "Unlimited",
+                  },
+                  {
+                    feature: "Website Monitoring",
+                    starter: "3 sites",
+                    professional: "Unlimited",
+                    enterprise: "Unlimited",
+                  },
+                  {
+                    feature: "Competitor Analysis",
+                    starter: "❌",
+                    professional: "✅",
+                    enterprise: "✅",
+                  },
+                  {
+                    feature: "API Access",
+                    starter: "❌",
+                    professional: "✅",
+                    enterprise: "✅",
+                  },
+                  {
+                    feature: "Support",
+                    starter: "Email",
+                    professional: "Priority",
+                    enterprise: "Dedicated",
+                  },
+                  {
+                    feature: "Custom Reports",
+                    starter: "❌",
+                    professional: "✅",
+                    enterprise: "✅",
+                  },
+                  {
+                    feature: "White Label",
+                    starter: "❌",
+                    professional: "❌",
+                    enterprise: "✅",
+                  },
                 ].map((row, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
                     <td className="py-4 px-6 font-medium">{row.feature}</td>
                     <td className="text-center py-4 px-6">{row.starter}</td>
-                    <td className="text-center py-4 px-6">{row.professional}</td>
+                    <td className="text-center py-4 px-6">
+                      {row.professional}
+                    </td>
                     <td className="text-center py-4 px-6">{row.enterprise}</td>
                   </tr>
                 ))}
@@ -247,7 +332,9 @@ const PricingComparison = () => {
 
         {/* FAQ Section */}
         <div className="text-center">
-          <h3 className="text-2xl font-bold mb-8">Frequently Asked Questions</h3>
+          <h3 className="text-2xl font-bold mb-8">
+            Frequently Asked Questions
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {[
               {
@@ -255,8 +342,8 @@ const PricingComparison = () => {
                 a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.",
               },
               {
-                q: "Is there a free trial?",
-                a: "Yes, we offer a 14-day free trial for our Professional plan. No credit card required.",
+                q: "Is there a free  ?",
+                a: "Yes, we offer a 14-day free   for our Professional plan. No credit card required.",
               },
               {
                 q: "What payment methods do you accept?",
@@ -267,7 +354,10 @@ const PricingComparison = () => {
                 a: "We offer a 30-day money-back guarantee for all paid plans if you're not satisfied.",
               },
             ].map((faq, index) => (
-              <div key={index} className="text-left bg-white p-6 rounded-lg shadow-md">
+              <div
+                key={index}
+                className="text-left bg-white p-6 rounded-lg shadow-md"
+              >
                 <h4 className="font-semibold mb-2">{faq.q}</h4>
                 <p className="text-gray-600 text-sm">{faq.a}</p>
               </div>

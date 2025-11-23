@@ -241,13 +241,13 @@ export function SeoauditTestimonials() {
               Ready to join our success stories?
             </h3>
             <p className="text-gray-600 mb-6">
-              Start your free trial today and see why thousands of marketers
-              choose SEOaudit Pro.
+              Start your free today and see why thousands of marketers choose
+              SEOaudit Pro.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/signup">
                 <Button size="lg" className="seoaudit-button">
-                  Start Free Trial
+                  Start Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>

@@ -107,9 +107,9 @@ export function SeoauditPricing() {
         "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
     },
     {
-      question: "Is there a free trial available?",
+      question: "Is there a free   available?",
       answer:
-        "Yes, we offer a 7-day free trial for all new users. No credit card required to start your trial.",
+        "Yes, we offer a 7-day free   for all new users. No credit card required to start your  .",
     },
     {
       question: "What payment methods do you accept?",
