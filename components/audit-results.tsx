@@ -36,12 +36,14 @@ import type { SEOAuditResult, PDFExportOptions } from "@/types/seo-audit";
 // import { SEOMetaTags } from "@/components/seo-meta-tags"
 
 export function AuditResults({ url }: { url: string }) {
-  const [auditResult, setAuditResult] = useState<SeoauditResult | null>(null);
+  const [auditResult, setAuditResult] = useState<SEOAuditResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [retryTime, setRetryTime] = useState<number | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [auditSaved, setAuditSaved] = useState<boolean | null>(null);
+  const [dailyLimitReached, setDailyLimitReached] = useState(false);
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 5000; // 5 seconds
 
@@ -60,7 +62,7 @@ export function AuditResults({ url }: { url: string }) {
       setError(null);
 
       try {
-        // Validate and normalize the URL
+        // Validate and normalize URL
         let normalizedUrl: string;
         try {
           // Remove trailing slash if present
@@ -84,10 +86,20 @@ export function AuditResults({ url }: { url: string }) {
         const timestamp = new Date().getTime();
         const apiUrl = `/api/audit?url=${encodeURIComponent(normalizedUrl)}&_=${timestamp}`;
 
+        // Get auth token if available
+        const authHeaders: { [key: string]: string } = {};
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('auth_token');
+          if (token) {
+            authHeaders['Authorization'] = `Bearer ${token}`;
+          }
+        }
+
         const response = await fetch(apiUrl, {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
+            ...authHeaders,
           },
           // Explicitly prevent caching
           cache: "no-store",
@@ -96,10 +108,20 @@ export function AuditResults({ url }: { url: string }) {
         const data = await response.json();
 
         if (!response.ok) {
+          // Handle specific error cases
+          if (response.status === 429) {
+            setDailyLimitReached(true);
+            throw new Error(
+              data.error || "You've reached the daily limit for this URL"
+            );
+          }
           throw new Error(
             data.error || `HTTP error! status: ${response.status}`
           );
         }
+        
+        // Check if audit was saved to database
+        setAuditSaved(data.savedToDatabase || false);
 
         // Check if we got a valid audit result
         if (!data || typeof data.overallScore === "undefined") {
@@ -192,6 +214,26 @@ export function AuditResults({ url }: { url: string }) {
   }
 
   if (error || !auditResult) {
+    // Special handling for daily limit error
+    if (dailyLimitReached) {
+      return (
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Daily Limit Reached</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>{error}</p>
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+              <h3 className="font-semibold mb-2">Want unlimited audits?</h3>
+              <p className="text-sm mb-3">Upgrade to premium to get unlimited daily audits for any URL.</p>
+              <Button asChild>
+                <a href="/upgrade">Upgrade to Premium</a>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+
     return (
       <Alert variant="destructive" className="max-w-2xl mx-auto">
         <AlertCircle className="h-4 w-4" />
@@ -270,7 +312,7 @@ export function AuditResults({ url }: { url: string }) {
         );
       }
 
-      // Get the PDF as a blob
+      // Get PDF as a blob
       const blob = await response.blob();
 
       // Get filename from Content-Disposition header if available
@@ -292,10 +334,10 @@ export function AuditResults({ url }: { url: string }) {
       link.href = pdfUrl;
       link.download = filename;
 
-      // Append to the document
+      // Append to document
       document.body.appendChild(link);
 
-      // Trigger the download
+      // Trigger download
       link.click();
 
       // Clean up
@@ -362,11 +404,61 @@ export function AuditResults({ url }: { url: string }) {
             Audit completed on {new Date().toLocaleDateString()} at{" "}
             {new Date().toLocaleTimeString()}
           </CardDescription>
+          {auditSaved !== null && (
+            <div className={`mt-2 px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${
+              auditSaved
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+            }`}>
+              {auditSaved ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3" />
+                  Saved to your account
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-3 w-3" />
+                  Not saved - create an account to save audits
+                </>
+              )}
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <AuditSummary overallScore={overallScore} />
         </CardContent>
       </Card>
+
+      {/* Authentication prompt for non-saved audits */}
+      {auditSaved === false && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Save Your Audit History</CardTitle>
+            <CardDescription>
+              Create a free account to save your audit history and track improvements over time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button asChild>
+                <a href="/signup">Create Free Account</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/login">Sign In</a>
+              </Button>
+            </div>
+            <div className="mt-4 text-sm text-muted-foreground">
+              <p>With an account, you can:</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Save unlimited audit results</li>
+                <li>Track SEO improvements over time</li>
+                <li>Compare historical performance</li>
+                <li>Export reports with your branding</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search Preview Section */}
       <Card>
@@ -485,7 +577,7 @@ export function AuditResults({ url }: { url: string }) {
               title={
                 onPageSEO.headings.h1Count > 0
                   ? `H1 tag was found (${onPageSEO.headings.h1Count}).`
-                  : "No H1 tag was found. For the best SEO results there should be exactly one H1 tag on each page."
+                  : "No H1 tag was found. For best SEO results there should be exactly one H1 tag on each page."
               }
               status={onPageSEO.headings.h1Count === 1 ? "good" : "error"}
               value={`H1: ${onPageSEO.headings.h1Count}, H2: ${onPageSEO.headings.h2Count}, H3: ${onPageSEO.headings.h3Count}`}
@@ -497,7 +589,7 @@ export function AuditResults({ url }: { url: string }) {
               title={
                 onPageSEO.headings.h2Count > 0
                   ? `H2 tags were found (${onPageSEO.headings.h2Count}).`
-                  : "No H2 tags were found on the page."
+                  : "No H2 tags were found on page."
               }
               status={onPageSEO.headings.h2Count > 0 ? "good" : "warning"}
               value={`H2: ${onPageSEO.headings.h2Count}`}
@@ -511,49 +603,53 @@ export function AuditResults({ url }: { url: string }) {
               title={
                 auditResult.onPageSEO.imageAlt.withAlt ===
                 auditResult.onPageSEO.imageAlt.total
-                  ? "All images on the page have alt attributes."
+                  ? "All images on page have alt attributes."
                   : `${auditResult.onPageSEO.imageAlt.total - auditResult.onPageSEO.imageAlt.withAlt} of ${auditResult.onPageSEO.imageAlt.total} images are missing alt attributes.`
               }
               status={onPageSEO.imageAlt.status}
-              value={`${onPageSEO.imageAlt.withAlt} of ${onPageSEO.imageAlt.total} images have alt text`}
-              issues={onPageSEO.imageAlt.issues}
-              recommendations={onPageSEO.imageAlt.recommendations}
+              value={`${auditResult.onPageSEO.imageAlt.withAlt} of ${auditResult.onPageSEO.imageAlt.total} images have alt text`}
+              issues={auditResult.onPageSEO.imageAlt.issues}
+              recommendations={auditResult.onPageSEO.imageAlt.recommendations}
               details={
-                onPageSEO.imageAlt.imageDetails.length > 0 ? (
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {onPageSEO.imageAlt.imageDetails.map((image, index) => (
-                      <div key={index} className="border rounded-md p-4">
-                        <div className="aspect-video bg-muted rounded-md overflow-hidden mb-2">
-                          <img
-                            src={image.src}
-                            alt={image.alt || "No alt text"}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src =
-                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='12' text-anchor='middle' dominant-baseline='middle' fill='%23999'%3EImage not found%3C/text%3E%3C/svg%3E";
-                            }}
-                          />
-                        </div>
-                        <div className="text-sm">
-                          <div className="font-medium">Alt Text:</div>
-                          <div
-                            className={
-                              image.alt ? "text-green-600" : "text-red-600"
-                            }
-                          >
-                            {image.alt || "Missing alt text"}
+                auditResult.onPageSEO.imageAlt.imageDetails.length > 0 ? (
+                  <div className="mt-4 space-y-2">
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Image paths as found on the audited website:
+                    </div>
+                    {auditResult.onPageSEO.imageAlt.imageDetails.map(
+                      (image, index) => (
+                        <div key={index} className="border rounded-md p-4">
+                          <div className="text-sm space-y-2">
+                            <div className="font-medium">Image Path:</div>
+                            <div
+                              className="text-muted-foreground text-xs break-all bg-gray-50 dark:bg-gray-800 p-2 rounded"
+                              title={image.src}
+                            >
+                              {image.src}
+                            </div>
+                            <div className="font-medium mt-2">Alt Text:</div>
+                            <div
+                              className={
+                                image.alt ? "text-green-600" : "text-red-600"
+                              }
+                            >
+                              {image.alt || "Missing alt text"}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 ) : null
               }
             />
 
             <AuditItem
-              title="The page has a correct number of internal and external links."
+              title={
+                onPageSEO.internalLinks.count > 0
+                  ? `Found ${onPageSEO.internalLinks.count} internal link${onPageSEO.internalLinks.count === 1 ? "" : "s"} on the page.`
+                  : "No internal links found on the page."
+              }
               status={onPageSEO.internalLinks.status}
               value={`Internal: ${onPageSEO.internalLinks.count}`}
               issues={onPageSEO.internalLinks.issues}
@@ -571,7 +667,7 @@ export function AuditResults({ url }: { url: string }) {
 
           <Accordion type="single" collapsible className="space-y-4 sm:mb-4">
             <AuditItem
-              title="The page is using the canonical link tag."
+              title="The page is using canonical link tag."
               status={technicalSEO.canonicalTags.status}
               value={technicalSEO.canonicalTags.value}
               issues={technicalSEO.canonicalTags.issues}
@@ -799,7 +895,7 @@ export function AuditResults({ url }: { url: string }) {
             <AuditItem
               title="HTML document size"
               status="warning"
-              value="The size of the HTML document is over our recommendation of 50 Kb."
+              value="The size of HTML document is over our recommendation of 50 Kb."
               issues={["Large HTML documents can slow down page rendering"]}
               recommendations={[
                 "Reduce HTML size by removing unnecessary markup and comments.",

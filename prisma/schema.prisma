@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -615,4 +615,29 @@ enum NotificationType {
   WARNING
   ERROR
   SYSTEM
+}
+
+model AuditAttempt {
+  id          String   @id @default(cuid())
+  url         String
+  ipHash      String   // Hashed IP for non-authenticated users
+  userId      String?  // Optional - for authenticated users
+  attemptDate DateTime @default(now())
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@index([url, attemptDate])
+  @@index([userId, attemptDate])
+  @@index([ipHash, attemptDate])
+}
+
+
+model Suggestion {
+  id        String   @id @default(cuid())
+  email     String
+  comment   String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([createdAt])
 }

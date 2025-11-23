@@ -39,20 +39,21 @@ interface LogFileAnalyzerResult {
       lastCrawled: string;
       statusCode: string;
     }>;
-    securityIssues: Array<{
-      type: string;
-      severity: "low" | "medium" | "high" | "critical";
-      description: string;
-      count: number;
-      firstOccurrence: string;
-    }>;
+  };
+  securityIssues: Array<{
+    type: string;
+    severity: "low" | "medium" | "high" | "critical";
+    description: string;
+    count: number;
+    firstOccurrence: string;
+  }>;
   performanceIssues: Array<{
       type: string;
-      severity: "low" | "medium" | "high" | "critical";
-      description: string;
-      count: number;
-      avgResponseTime: number;
-    }>;
+    severity: "low" | "medium" | "high" | "critical";
+    description: string;
+    count: number;
+    avgResponseTime: number;
+  }>;
   recommendations: string[];
   scoreBreakdown: {
     crawlEfficiency: number;
@@ -62,7 +63,7 @@ interface LogFileAnalyzerResult {
   };
 }
 
-async function parseLogFile(content: string): Promise<any> {
+export async function parseLogFile(content: string): Promise<any> {
   const lines = content.split('\n').filter(line => line.trim() !== '');
   const entries: any[] = [];
   let currentEntry = null;
@@ -214,8 +215,8 @@ async function analyzeLogData(entries: any[]): Promise<LogFileAnalyzerResult> {
     crawlStats: {
       totalCrawls,
       uniquePages: uniquePages.size,
-      crawlFrequency: Math.round(totalCrawls / Math.max(1, entries.length / (24 * 60 * 60 * 1000)), // per day
-      avgCrawlDuration: avgResponseTime / 1000, // in seconds
+      crawlFrequency: Math.round(totalCrawls / Math.max(1, entries.length / (24 * 60 * 60 * 1000))), // per day
+      avgCrawlDuration: avgResponseTime / 1000 // in seconds
     },
     userAgentAnalysis: {
       topBots,
@@ -342,6 +343,8 @@ export async function POST(request: Request) {
         logContent = await response.text();
         const parseResult = await parseLogFile(logContent);
         entries = parseResult.entries;
+      } catch (error) {
+        return NextResponse.json({ error: "Failed to fetch log file" }, { status: 400 });
       }
     } else {
       return NextResponse.json({ error: "Either logFileContent or logFileUrl is required" }, { status: 400 });

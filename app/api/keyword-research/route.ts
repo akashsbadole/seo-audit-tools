@@ -498,7 +498,7 @@ export async function POST(request: Request) {
       competition,
       trend: Array.from({ length: 12 }, (_, i) => ({
         month: new Date(2024, i, 1).toLocaleString('en', { month: 'short' }),
-        volume: Math.max(10, Math.floor(searchVolume * (0.8 + Math.random() * 0.4)),
+        volume: Math.max(10, Math.floor(searchVolume * (0.8 + Math.random() * 0.4)))
       })),
       relatedKeywords,
       suggestions,

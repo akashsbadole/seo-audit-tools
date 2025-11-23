@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { authenticateUser } from '@/lib/auth-helpers';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateUser } from "@/lib/auth-helpers";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateUser(request);
-    
+
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -13,34 +13,45 @@ export async function POST(request: NextRequest) {
     const { user } = auth;
 
     const body = await request.json();
-    const { url, depth = 3, maxPages = 500, includeImages = true, changeFreq = 'weekly', priority = '0.5' } = body;
+    const {
+      url,
+      depth = 3,
+      maxPages = 500,
+      includeImages = true,
+      changeFreq = "weekly",
+      priority = "0.5",
+    } = body;
 
     if (!url) {
-      return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
     // Check user's usage limits
     const userDetails = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { isPremium: true, usageLimit: true }
+      select: { isPremium: true, usageLimit: true },
     });
 
     if (!userDetails?.isPremium) {
       const today = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-      
+
       const currentUsage = await prisma.usageTracking.count({
         where: {
           userId: user.id,
-          feature: 'sitemap-generator',
-          createdAt: { gte: monthStart }
-        }
+          feature: "sitemap-generator",
+          createdAt: { gte: monthStart },
+        },
       });
 
       if (currentUsage >= 5) {
-        return NextResponse.json({ 
-          error: 'Monthly limit reached. Upgrade to Premium for unlimited access.' 
-        }, { status: 429 });
+        return NextResponse.json(
+          {
+            error:
+              "Monthly limit reached. Upgrade to Premium for unlimited access.",
+          },
+          { status: 429 }
+        );
       }
     }
 
@@ -53,34 +64,41 @@ export async function POST(request: NextRequest) {
         includeImages,
         changeFreq,
         priority,
-        status: 'pending',
-        userId: user.id
-      }
+        status: "pending",
+        userId: user.id,
+      },
     });
 
     // Track usage for free users
     if (!userDetails?.isPremium) {
       await prisma.usageTracking.create({
         data: {
-          feature: 'sitemap-generator',
-          userId: user.id
-        }
+          feature: "sitemap-generator",
+          userId: user.id,
+        },
       });
     }
 
     // Start sitemap generation process in background
-    generateSitemap(job.id, url, depth, maxPages, includeImages, changeFreq, priority);
+    generateSitemap(
+      job.id,
+      url,
+      depth,
+      maxPages,
+      includeImages,
+      changeFreq,
+      priority
+    );
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       jobId: job.id,
-      message: 'Sitemap generation started. Results will be available shortly.' 
+      message: "Sitemap generation started. Results will be available shortly.",
     });
-
   } catch (error) {
-    console.error('Sitemap generation error:', error);
+    console.error("Sitemap generation error:", error);
     return NextResponse.json(
-      { error: 'Failed to start sitemap generation' },
+      { error: "Failed to start sitemap generation" },
       { status: 500 }
     );
   }
@@ -89,7 +107,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticateUser(request);
-    
+
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
@@ -97,22 +115,22 @@ export async function GET(request: NextRequest) {
     const { user } = auth;
 
     const { searchParams } = new URL(request.url);
-    const jobId = searchParams.get('jobId');
+    const jobId = searchParams.get("jobId");
 
     if (jobId) {
       // Get specific job results
       const job = await prisma.sitemapGeneration.findFirst({
         where: {
           id: jobId,
-          userId: user.id
+          userId: user.id,
         },
         include: {
-          sitemapPages: true
-        }
+          sitemapPages: true,
+        },
       });
 
       if (!job) {
-        return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+        return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
 
       return NextResponse.json(job);
@@ -120,31 +138,40 @@ export async function GET(request: NextRequest) {
       // Get all jobs for user
       const jobs = await prisma.sitemapGeneration.findMany({
         where: {
-          userId: user.id
+          userId: user.id,
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
-        take: 20
+        take: 20,
       });
 
       return NextResponse.json(jobs);
     }
-
   } catch (error) {
-    console.error('Get sitemap generation error:', error);
+    console.error("Get sitemap generation error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch sitemap generation results' },
+      { error: "Failed to fetch sitemap generation results" },
       { status: 500 }
     );
   }
 }
 
 // Background function to generate sitemap
-async function generateSitemap(jobId: string, baseUrl: string, maxDepth: number, maxPages: number, includeImages: boolean, changeFreq: string, priority: string) {
+async function generateSitemap(
+  jobId: string,
+  baseUrl: string,
+  maxDepth: number,
+  maxPages: number,
+  includeImages: boolean,
+  changeFreq: string,
+  priority: string
+) {
   try {
     const visited = new Set<string>();
-    const queue: { url: string; depth: number }[] = [{ url: baseUrl, depth: 0 }];
+    const queue: { url: string; depth: number }[] = [
+      { url: baseUrl, depth: 0 },
+    ];
     const pages: Array<{
       url: string;
       title: string;
@@ -156,47 +183,53 @@ async function generateSitemap(jobId: string, baseUrl: string, maxDepth: number,
     const updateJobStatus = async (status: string, progress?: number) => {
       await prisma.sitemapGeneration.update({
         where: { id: jobId },
-        data: { 
+        data: {
           status,
           progress,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     };
 
     while (queue.length > 0 && pages.length < maxPages) {
       const { url, depth } = queue.shift()!;
-      
+
       if (visited.has(url) || depth > maxDepth) continue;
       visited.add(url);
 
       try {
-        const response = await fetch(url, { 
-          method: 'GET',
-          signal: AbortSignal.timeout(15000) // 15 second timeout
+        const response = await fetch(url, {
+          method: "GET",
+          signal: AbortSignal.timeout(15000), // 15 second timeout
         });
 
-        if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+        if (
+          response.ok &&
+          response.headers.get("content-type")?.includes("text/html")
+        ) {
           const html = await response.text();
-          
+
           // Extract page information
           const title = extractTitle(html);
           const description = extractDescription(html);
-          const lastModified = response.headers.get('last-modified') || new Date().toISOString();
-          const images = includeImages ? extractImages(html, new URL(url).origin) : undefined;
+          const lastModified =
+            response.headers.get("last-modified") || new Date().toISOString();
+          const images = includeImages
+            ? extractImages(html, new URL(url).origin)
+            : undefined;
 
           pages.push({
             url,
             title,
             description,
             lastModified,
-            images
+            images,
           });
 
           // Extract links for crawling
           if (depth < maxDepth) {
             const links = extractLinks(html, new URL(url).origin);
-            
+
             for (const link of links) {
               if (!visited.has(link) && pages.length < maxPages) {
                 queue.push({ url: link, depth: depth + 1 });
@@ -207,8 +240,7 @@ async function generateSitemap(jobId: string, baseUrl: string, maxDepth: number,
 
         // Update progress
         const progress = Math.round((pages.length / maxPages) * 100);
-        await updateJobStatus('running', progress);
-
+        await updateJobStatus("running", progress);
       } catch (error) {
         console.error(`Error crawling ${url}:`, error);
       }
@@ -222,33 +254,32 @@ async function generateSitemap(jobId: string, baseUrl: string, maxDepth: number,
     await prisma.sitemapGeneration.update({
       where: { id: jobId },
       data: {
-        status: 'completed',
+        status: "completed",
         progress: 100,
         completedAt: new Date(),
         sitemapXml,
         sitemapIndexXml,
         totalPages: pages.length,
         sitemapPages: {
-          create: pages.map(page => ({
+          create: pages.map((page) => ({
             url: page.url,
             title: page.title,
             description: page.description,
             lastModified: page.lastModified,
-            images: page.images || []
-          }))
-        }
-      }
+            images: page.images || [],
+          })),
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Background sitemap generation error:', error);
+    console.error("Background sitemap generation error:", error);
     await prisma.sitemapGeneration.update({
       where: { id: jobId },
       data: {
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        completedAt: new Date()
-      }
+        status: "failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        completedAt: new Date(),
+      },
     });
   }
 }
@@ -256,36 +287,41 @@ async function generateSitemap(jobId: string, baseUrl: string, maxDepth: number,
 // Extract title from HTML
 function extractTitle(html: string): string {
   const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-  return titleMatch ? titleMatch[1].trim() : '';
+  return titleMatch ? titleMatch[1].trim() : "";
 }
 
 // Extract description from HTML
 function extractDescription(html: string): string {
-  const descMatch = html.match(/<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i);
-  return descMatch ? descMatch[1].trim() : '';
+  const descMatch = html.match(
+    /<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\'][^>]*>/i
+  );
+  return descMatch ? descMatch[1].trim() : "";
 }
 
 // Extract images from HTML
-function extractImages(html: string, baseUrl: string): Array<{ url: string; title: string; caption: string }> {
+function extractImages(
+  html: string,
+  baseUrl: string
+): Array<{ url: string; title: string; caption: string }> {
   const imageRegex = /<img[^>]*src\s*=\s*(['"])(.*?)\1[^>]*>/gi;
   const images: Array<{ url: string; title: string; caption: string }> = [];
   let match;
 
   while ((match = imageRegex.exec(html)) !== null) {
     let src = match[2];
-    
-    if (src.startsWith('/')) {
+
+    if (src.startsWith("/")) {
       src = baseUrl + src;
-    } else if (!src.startsWith('http')) {
-      src = baseUrl + '/' + src;
+    } else if (!src.startsWith("http")) {
+      src = baseUrl + "/" + src;
     }
 
     // Only include same-origin images
     if (src.startsWith(baseUrl)) {
       images.push({
         url: src,
-        title: '', // Could extract from alt attribute
-        caption: '' // Could extract from title or caption
+        title: "", // Could extract from alt attribute
+        caption: "", // Could extract from title or caption
       });
     }
   }
@@ -301,22 +337,28 @@ function extractLinks(html: string, baseOrigin: string): string[] {
 
   while ((match = linkRegex.exec(html)) !== null) {
     let href = match[2];
-    
+
     // Skip empty links, anchors, javascript, mailto, and external links
-    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('http')) {
+    if (
+      !href ||
+      href.startsWith("#") ||
+      href.startsWith("javascript:") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("http")
+    ) {
       continue;
     }
 
     // Convert relative URLs to absolute
-    if (href.startsWith('/')) {
+    if (href.startsWith("/")) {
       href = baseOrigin + href;
-    } else if (!href.startsWith('http')) {
-      href = baseOrigin + '/' + href;
+    } else if (!href.startsWith("http")) {
+      href = baseOrigin + "/" + href;
     }
 
     // Only include same-origin links
     if (href.startsWith(baseOrigin)) {
-      links.push(href.split('#')[0]); // Remove anchor fragments
+      links.push(href.split("#")[0]); // Remove anchor fragments
     }
   }
 
@@ -324,21 +366,26 @@ function extractLinks(html: string, baseOrigin: string): string[] {
 }
 
 // Generate sitemap XML
-function generateSitemapXml(pages: any[], changeFreq: string, priority: string): string {
+function generateSitemapXml(
+  pages: any[],
+  changeFreq: string,
+  priority: string
+): string {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
+  xml +=
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n';
 
   for (const page of pages) {
-    xml += '  <url>\n';
+    xml += "  <url>\n";
     xml += `    <loc>${escapeXml(page.url)}</loc>\n`;
-    
+
     if (page.lastModified) {
       xml += `    <lastmod>${escapeXml(page.lastModified)}</lastmod>\n`;
     }
-    
+
     xml += `    <changefreq>${changeFreq}</changefreq>\n`;
     xml += `    <priority>${priority}</priority>\n`;
-    
+
     if (page.title) {
       xml += `    <image:image>\n`;
       xml += `      <image:loc>${escapeXml(page.url)}</image:loc>\n`;
@@ -348,11 +395,11 @@ function generateSitemapXml(pages: any[], changeFreq: string, priority: string):
       }
       xml += `    </image:image>\n`;
     }
-    
-    xml += '  </url>\n';
+
+    xml += "  </url>\n";
   }
 
-  xml += '</urlset>';
+  xml += "</urlset>";
   return xml;
 }
 
@@ -363,22 +410,22 @@ function generateSitemapIndexXml(baseUrl: string, totalPages: number): string {
   xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
 
   for (let i = 0; i < sitemapsNeeded; i++) {
-    xml += '  <sitemap>\n';
+    xml += "  <sitemap>\n";
     xml += `    <loc>${escapeXml(`${baseUrl}/sitemap-${i + 1}.xml`)}</loc>\n`;
     xml += `    <lastmod>${new Date().toISOString()}</lastmod>\n`;
-    xml += '  </sitemap>\n';
+    xml += "  </sitemap>\n";
   }
 
-  xml += '</sitemapindex>';
+  xml += "</sitemapindex>";
   return xml;
 }
 
 // Escape XML special characters
 function escapeXml(unsafe: string): string {
   return unsafe
-    .replace(/&/g, '&')
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
-    .replace(/"/g, '"')
-    .replace(/'/g, ''');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }

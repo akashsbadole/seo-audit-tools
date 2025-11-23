@@ -162,3 +162,7 @@ body {
     @apply w-12 h-12 bg-[hsl(var(--seoaudit-orange))] bg-opacity-10 rounded-lg flex items-center justify-center text-[hsl(var(--seoaudit-orange))];
   }
 }
+
+nav li::marker{
+  content: "";
+}

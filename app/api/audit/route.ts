@@ -2,11 +2,12 @@ import { type NextRequest, NextResponse } from "next/server"
 import * as cheerio from "cheerio"
 import type { SEOAuditResult } from "@/types/seo-audit"
 import { searchAndStoreDomain, updateDomainReport } from '@/lib/db'
-import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit'
+import { checkUsageLimit, incrementUsage, checkDailyUrlLimit, recordAuditAttempt } from '@/lib/middleware/usageLimit'
 import dns from 'dns'
 import { promisify } from 'util'
 import jwt from 'jsonwebtoken'
 import https from 'https'
+import prisma from '@/lib/prisma'
 
 const lookup = promisify(dns.lookup)
 
@@ -219,13 +220,15 @@ function mockKeywordDensityCheck($: cheerio.CheerioAPI) {
     'window', 'function', 'null', 'undefined', 'var', 'let', 'const',
     'true', 'false', 'return', 'new', 'this', 'typeof', 'instanceof',
     'break', 'case', 'catch', 'class', 'continue', 'debugger', 'default',
-    'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'if',
-    'import', 'in', 'yield', 'while', 'void', 'try', 'switch', 'super',
+    'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'from',
+    'if', 'import', 'in', 'instanceof', 'let', 'new', 'package',
+    'private', 'protected', 'public', 'return', 'static', 'super', 'switch',
+    'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield',
     'script', 'style', 'link', 'head', 'body', 'html', 'div', 'span',
     'ytcsi', 'ytcommand', 'ytcfg', 'ytatr', 'onpolymerready', 'polymer'
   ])
 
-  // Clean and tokenize the text
+  // Clean and tokenize text
   const words = content
     .toLowerCase()
     .split(/[\s,\.\!\?\-\(\)\[\]\{\}:;"']+/)
@@ -304,6 +307,7 @@ function mockThinContentCheck(wordCount: number) {
     recommendations.push("Consider expanding your content to 1000+ words for comprehensive coverage")
     recommendations.push("Add more sections addressing user questions and needs")
     recommendations.push("Include expert insights, data, or case studies to add depth")
+    recommendations.push("If appropriate, add a 'Last Updated' date to signal freshness to users and search engines")
 
     return {
       status: "warning" as const,
@@ -651,7 +655,7 @@ async function fetchWithFallback(url: string): Promise<{ html: string; finalUrl:
 
 export async function GET(request: NextRequest) {
   try {
-    // Get the URL parameter
+    // Get URL parameter
     const url = request.nextUrl.searchParams.get("url");
 
     if (!url) {
@@ -671,28 +675,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Rate limiting check
-    const currentTime = Date.now();
-    const urlKey = url.toLowerCase();
-    const requestRecord = requestCounts.get(urlKey);
-
-    if (requestRecord && currentTime - requestRecord.timestamp < WINDOW_SIZE) {
-      if (requestRecord.count >= MAX_REQUESTS) {
-        return NextResponse.json(
-          { error: "Rate limit exceeded. Please try again later." },
-          { status: 429 }
-        );
-      }
-      requestRecord.count++;
-    } else {
-      requestCounts.set(urlKey, { count: 1, timestamp: currentTime });
+    // Check daily per-URL limit
+    const urlLimitCheck = await checkDailyUrlLimit(url, request);
+    if (!urlLimitCheck.allowed) {
+      return NextResponse.json(
+        { error: urlLimitCheck.message },
+        { status: 429 }
+      );
     }
 
     // Extract domain from URL
     let domain = url.replace(/^https?:\/\//, '');
     domain = domain.split('/')[0];
 
-    // Optional: Get user session if they're logged in
+    // Get user session if they're logged in
     const authHeader = request.headers.get('Authorization')
     let userId = null
     
@@ -714,6 +710,9 @@ export async function GET(request: NextRequest) {
       // Perform SEO audit
       const auditResult = performSEOAudit($, finalUrl || url, domain);
 
+      // Record audit attempt for tracking
+      await recordAuditAttempt(url, request);
+
       // If user is logged in, store their audit history
       if (userId) {
         try {
@@ -729,13 +728,121 @@ export async function GET(request: NextRequest) {
             ipAddress,
             userId
           });
+
+          // Store audit results in SiteAudit table
+          const audit = await prisma.siteAudit.create({
+            data: {
+              userId,
+              url,
+              status: "COMPLETED",
+              digitalCertaintyIndex: Math.round(auditResult.overallScore * 0.8),
+              seoScore: auditResult.overallScore,
+              accessibilityScore: Math.round(auditResult.overallScore * 0.9),
+              performanceScore: auditResult.performance.score,
+              qualityScore: Math.round(auditResult.contentSEO.score * 0.9),
+              totalPages: 1,
+              crawledPages: 1,
+              totalIssues: Math.floor((100 - auditResult.overallScore) / 10),
+              criticalIssues: auditResult.onPageSEO.metaTitle.status === "error" ? 1 : 0,
+              warningIssues: auditResult.technicalSEO.robotsTxt.status === "warning" ? 1 : 0,
+              infoIssues: 0,
+              startedAt: new Date(),
+              completedAt: new Date(),
+            },
+          });
+
+          // Store detailed audit results
+          const auditResults = [
+            {
+              auditId: audit.id,
+              category: "SEO",
+              subcategory: "On-Page",
+              score: auditResult.onPageSEO.score,
+              maxScore: 100,
+              data: auditResult.onPageSEO,
+            },
+            {
+              auditId: audit.id,
+              category: "Technical",
+              subcategory: "Technical SEO",
+              score: auditResult.technicalSEO.score,
+              maxScore: 100,
+              data: auditResult.technicalSEO,
+            },
+            {
+              auditId: audit.id,
+              category: "Content",
+              subcategory: "Content SEO",
+              score: auditResult.contentSEO.score,
+              maxScore: 100,
+              data: auditResult.contentSEO,
+            },
+            {
+              auditId: audit.id,
+              category: "Performance",
+              subcategory: "Performance",
+              score: auditResult.performance.score,
+              maxScore: 100,
+              data: auditResult.performance,
+            },
+          ];
+
+          await prisma.auditResult.createMany({
+            data: auditResults,
+          });
+
+          // Store audit issues
+          const auditIssues = [];
+          
+          // Collect issues from all audit categories
+          if (auditResult.onPageSEO.metaTitle.issues.length > 0) {
+            auditIssues.push({
+              auditId: audit.id,
+              severity: "CRITICAL" as const,
+              category: "SEO",
+              title: "Meta Title Issues",
+              description: auditResult.onPageSEO.metaTitle.issues.join(", "),
+              suggestion: auditResult.onPageSEO.metaTitle.recommendations.join(", "),
+            });
+          }
+
+          if (auditResult.technicalSEO.robotsTxt.issues.length > 0) {
+            auditIssues.push({
+              auditId: audit.id,
+              severity: "WARNING" as const,
+              category: "Technical",
+              title: "Robots.txt Issues",
+              description: auditResult.technicalSEO.robotsTxt.issues.join(", "),
+              suggestion: auditResult.technicalSEO.robotsTxt.recommendations.join(", "),
+            });
+          }
+
+          if (auditIssues.length > 0) {
+            await prisma.auditIssue.createMany({
+              data: auditIssues,
+            });
+          }
+
+          console.log(`Audit stored successfully for user ${userId}, URL: ${url}`);
+          return NextResponse.json({
+            ...auditResult,
+            savedToDatabase: true
+          });
         } catch (err) {
           console.error('Error storing audit history:', err);
           // Continue with the audit even if storage fails
+          return NextResponse.json({
+            ...auditResult,
+            savedToDatabase: false
+          });
         }
+      } else {
+        console.log(`Audit performed without authentication for URL: ${url}`);
+        return NextResponse.json({
+          ...auditResult,
+          savedToDatabase: false
+        });
       }
-
-      return NextResponse.json(auditResult);
     } catch (error) {
       console.warn('Failed to fetch site, generating mock audit:', error);
       // Generate mock audit result if we can't fetch the site
@@ -1094,7 +1201,7 @@ function checkImageAlt($: cheerio.CheerioAPI) {
   const missingAltCount = totalImages - imagesWithAlt
 
   if (totalImages === 0) {
-    issues.push("No images found on the page")
+    issues.push("No images found on page")
     recommendations.push("Consider adding relevant images with descriptive alt text")
   } else if (missingAltCount > 0) {
     issues.push(`${missingAltCount} of ${totalImages} images are missing alt attributes`)
@@ -1251,7 +1358,7 @@ function checkStructuredData($: cheerio.CheerioAPI) {
     }
   }
 
-  // In a real implementation, you would validate the structured data
+  // In a real implementation, you would validate structured data
   // against Schema.org specifications
 
   return {
@@ -1312,14 +1419,14 @@ function checkCanonicalTags($: cheerio.CheerioAPI, url: string): AuditResult {
     const currentUrl = new URL(url).href
 
     if (canonicalUrl !== currentUrl) {
-      issues.push("Canonical URL does not match the current URL")
+      issues.push("Canonical URL does not match current URL")
       recommendations.push(
-        "Ensure the canonical URL points to the current page unless intentionally pointing elsewhere",
+        "Ensure canonical URL points to current page unless intentionally pointing elsewhere",
       )
     }
   } catch (error) {
     issues.push("Invalid canonical URL")
-    recommendations.push("Fix the canonical URL to ensure it's a valid URL")
+    recommendations.push("Fix canonical URL to ensure it's a valid URL")
   }
 
   if (!issues.length) {

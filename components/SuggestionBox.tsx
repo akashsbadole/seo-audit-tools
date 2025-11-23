@@ -17,20 +17,16 @@ export function SuggestionBox() {
     setIsSubmitting(true);
 
     try {
-      // Use POST to create a new bin for each suggestion
-      const BIN_URL = "https://api.jsonbin.io/v3/b";
-      const API_KEY =
-        "$2a$10$ofqeaGjcQC/3aAL3IlMZ/uhOo3UZC7K9IANWDx0NCyk7MfmDElWGK";
+      // Use local API to save suggestion
+      const API_URL = "/api/suggestions";
       const suggestionData = {
         email,
-        suggestion,
-        date: new Date().toISOString(),
+        comment: suggestion, // API expects 'comment' not 'suggestion'
       };
-      const response = await fetch(BIN_URL, {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Master-Key": API_KEY,
         },
         body: JSON.stringify(suggestionData),
       });
@@ -42,7 +38,7 @@ export function SuggestionBox() {
         setSuggestion("");
         setIsOpen(false);
       } else {
-        toast.error(data.message || "Failed to save suggestion");
+        toast.error(data.error || "Failed to save suggestion");
       }
     } catch (error) {
       toast.error("Failed to submit suggestion");

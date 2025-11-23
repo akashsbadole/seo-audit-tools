@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { addSuggestion, isEmailExists } from '@/lib/suggestions';
+import { addSuggestion, isEmailExists } from '@/lib/db-suggestions';
 
 export async function POST(request: Request) {
   try {
@@ -31,4 +31,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}
