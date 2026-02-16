@@ -1,250 +1,234 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import {
-  BarChart3,
-  Search,
-  Globe,
-  Target,
-  FileText,
-  Users,
+import { 
+  Search, 
+  TrendingUp, 
+  BarChart3, 
+  Globe, 
+  Shield, 
   Zap,
-  Shield,
-  TrendingUp,
-  Eye,
-  Link as LinkIcon,
+  Target,
+  Link2,
+  FileText,
+  Code,
   Smartphone,
+  Database,
   ArrowRight,
   CheckCircle,
+  Brain,
+  Megaphone,
+  Layers,
+  Rocket,
+  Eye,
+  Settings,
+  Users,
+  MessageSquare,
+  Clock,
+  Award
 } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+const features = [
+  {
+    category: "Research & Analysis",
+    items: [
+      {
+        title: "Keyword Research",
+        description: "Discover high-volume, low-competition keywords to target. Get search volume, difficulty scores, and trend data.",
+        icon: Search,
+        color: "from-blue-500 to-cyan-500",
+        href: "/keyword-research"
+      },
+      {
+        title: "Competitor Analysis",
+        description: "Analyze your competitors' SEO strategies, keywords, backlinks, and traffic to find opportunities.",
+        icon: TrendingUp,
+        color: "from-purple-500 to-pink-500",
+        href: "/competitor-analysis"
+      },
+      {
+        title: "Backlink Analytics",
+        description: "Explore your backlink profile and discover new link-building opportunities with comprehensive analysis.",
+        icon: Link2,
+        color: "from-orange-500 to-red-500",
+        href: "/backlink-analytics"
+      },
+      {
+        title: "Domain Overview",
+        description: "Get comprehensive domain metrics including authority scores, traffic estimates, and ranking data.",
+        icon: Globe,
+        color: "from-green-500 to-teal-500",
+        href: "/domain-overview"
+      }
+    ]
+  },
+  {
+    category: "Technical SEO",
+    items: [
+      {
+        title: "Site Audit",
+        description: "Identify technical issues that hurt your rankings. Get actionable recommendations to fix problems.",
+        icon: Shield,
+        color: "from-red-500 to-orange-500",
+        href: "/enhanced-site-audit"
+      },
+      {
+        title: "Page Speed Check",
+        description: "Analyze page load times and get suggestions to improve Core Web Vitals and user experience.",
+        icon: Rocket,
+        color: "from-pink-500 to-rose-500",
+        href: "/tools/site-speed"
+      },
+      {
+        title: "Mobile-Friendly Test",
+        description: "Check how well your site performs on mobile devices and get optimization recommendations.",
+        icon: Smartphone,
+        color: "from-cyan-500 to-blue-500",
+        href: "/tools/mobile-friendly"
+      },
+      {
+        title: "Schema Generator",
+        description: "Create and implement structured data markup to enhance your search appearance.",
+        icon: Code,
+        color: "from-violet-500 to-purple-500",
+        href: "/tools/structured-data"
+      }
+    ]
+  },
+  {
+    category: "Content & Marketing",
+    items: [
+      {
+        title: "Content Analyzer",
+        description: "Optimize your content with AI-powered suggestions for readability, keyword density, and SEO.",
+        icon: FileText,
+        color: "from-yellow-500 to-orange-500",
+        href: "/writing-assistant"
+      },
+      {
+        title: "SEO Writing Assistant",
+        description: "Get real-time recommendations as you write to create search-engine-friendly content.",
+        icon: Brain,
+        color: "from-indigo-500 to-blue-500",
+        href: "/writing-assistant"
+      },
+      {
+        title: "Position Tracking",
+        description: "Monitor your keyword rankings over time and get notified of position changes.",
+        icon: Target,
+        color: "from-emerald-500 to-green-500",
+        href: "/position-tracking"
+      },
+      {
+        title: "Log File Analyzer",
+        description: "Analyze server logs to understand how search engines crawl your site and identify issues.",
+        icon: Database,
+        color: "from-slate-500 to-zinc-500",
+        href: "/log-file-analyzer"
+      }
+    ]
+  },
+  {
+    category: "Tools & Utilities",
+    items: [
+      {
+        title: "Meta Tags Generator",
+        description: "Create optimized meta titles and descriptions with preview snippets for search results.",
+        icon: Layers,
+        color: "from-amber-500 to-yellow-500",
+        href: "/tools/meta-tags"
+      },
+      {
+        title: "Bulk Analysis",
+        description: "Analyze multiple URLs at once for comprehensive SEO insights and comparisons.",
+        icon: Megaphone,
+        color: "from-rose-500 to-pink-500",
+        href: "/bulk-analysis"
+      },
+      {
+        title: "SEO Score Calculator",
+        description: "Get an instant SEO score for any page with detailed recommendations for improvement.",
+        icon: Award,
+        color: "from-violet-500 to-fuchsia-500",
+        href: "/tools/seo-score"
+      },
+      {
+        title: "Broken Link Checker",
+        description: "Find broken links on your site to improve user experience and preserve link equity.",
+        icon: Eye,
+        color: "from-teal-500 to-cyan-500",
+        href: "/tools/broken-links"
+      }
+    ]
+  }
+];
 
 export function SeoauditFeatures() {
-  const featureCategories = [
-    {
-      title: "SEO Tools",
-      description: "Comprehensive tools to boost your search rankings",
-      icon: <Search className="h-8 w-8" />,
-      features: [
-        {
-          name: "Keyword Research",
-          description: "Find profitable keywords with advanced filters",
-          icon: <Search className="h-5 w-5" />,
-        },
-        {
-          name: "On-Page SEO Checker",
-          description: "Optimize your content for better rankings",
-          icon: <FileText className="h-5 w-5" />,
-        },
-        {
-          name: "Backlink Analytics",
-          description: "Analyze your backlink profile and competitors'",
-          icon: <LinkIcon className="h-5 w-5" />,
-        },
-        {
-          name: "Position Tracking",
-          description: "Monitor your search rankings daily",
-          icon: <TrendingUp className="h-5 w-5" />,
-        },
-      ],
-    },
-    {
-      title: "Content Marketing",
-      description: "Create content that ranks and converts",
-      icon: <FileText className="h-8 w-8" />,
-      features: [
-        {
-          name: "SEO Content Template",
-          description: "Get SEO-optimized briefs in seconds",
-          icon: <FileText className="h-5 w-5" />,
-        },
-        {
-          name: "Topic Research",
-          description: "Discover trending topics in your niche",
-          icon: <Target className="h-5 w-5" />,
-        },
-        {
-          name: "Brand Monitoring",
-          description: "Track mentions of your brand online",
-          icon: <Eye className="h-5 w-5" />,
-        },
-        {
-          name: "Post Tracking",
-          description: "Monitor social media performance",
-          icon: <Users className="h-5 w-5" />,
-        },
-      ],
-    },
-    {
-      title: "Market Research",
-      description: "Understand your market and competitors",
-      icon: <BarChart3 className="h-8 w-8" />,
-      features: [
-        {
-          name: "Market Explorer",
-          description: "Analyze market trends and dynamics",
-          icon: <Globe className="h-5 w-5" />,
-        },
-        {
-          name: "Competitor Intelligence",
-          description: "Uncover competitors' strategies",
-          icon: <Target className="h-5 w-5" />,
-        },
-        {
-          name: "Traffic Analytics",
-          description: "Estimate any website's traffic",
-          icon: <TrendingUp className="h-5 w-5" />,
-        },
-        {
-          name: "Keyword Gap",
-          description: "Find keywords your competitors rank for",
-          icon: <Search className="h-5 w-5" />,
-        },
-      ],
-    },
-    {
-      title: "Technical SEO",
-      description: "Ensure your site meets technical requirements",
-      icon: <Shield className="h-8 w-8" />,
-      features: [
-        {
-          name: "Site Audit",
-          description: "Find and fix technical SEO issues",
-          icon: <Shield className="h-5 w-5" />,
-        },
-        {
-          name: "Log File Analyzer",
-          description: "Understand how search bots crawl your site",
-          icon: <Eye className="h-5 w-5" />,
-        },
-        {
-          name: "On-Page SEO Checker",
-          description: "Optimize your pages for search engines",
-          icon: <FileText className="h-5 w-5" />,
-        },
-        {
-          name: "Mobile-Friendly Test",
-          description: "Ensure your site works on all devices",
-          icon: <Smartphone className="h-5 w-5" />,
-        },
-      ],
-    },
-  ];
-
-  const benefits = [
-    "55+ tools for digital marketing",
-    "21 billion keywords in database",
-    "43 trillion backlinks indexed",
-    "800+ million domain profiles",
-    "Data from 190+ countries",
-  ];
-
   return (
-    <section id="features" className="bg-gray-50 py-20">
-      <div className="seoaudit-container">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <Badge className="mb-4 px-3 py-1 text-sm bg-[hsl(var(--seoaudit-orange))]/10 text-[hsl(var(--seoaudit-orange))] border-[hsl(var(--seoaudit-orange))]/20">
-            <Zap className="mr-2 h-4 w-4" />
-            All-in-One Marketing Platform
-          </Badge>
+    <section id="features" className="py-24 bg-[#0a0a0f] relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-0 w-[400px] h-[400px] bg-gradient-to-r from-violet-600/10 to-transparent rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-l from-cyan-600/10 to-transparent rounded-full blur-[100px]" />
+      </div>
 
-          <h2 className="seoaudit-heading mb-6">
-            Everything You Need to{" "}
-            <span className="seoaudit-gradient-text">Win Online</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-gray-400 mb-6">
+            <Zap className="w-4 h-4 text-violet-400" />
+            Powerful SEO Tools
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Everything You Need to
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400"> Rank Higher</span>
           </h2>
-
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Get access to 55+ tools that help you improve your online
-            visibility, analyze competitors, and grow your business.
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            Comprehensive suite of SEO tools to analyze, audit, and optimize your website for search engines.
           </p>
-
-          {/* Benefits */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {benefits.map((benefit, index) => (
-              <div
-                key={index}
-                className="flex items-center text-sm text-gray-600"
-              >
-                <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                {benefit}
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Feature Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          {featureCategories.map((category, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 hover:shadow-lg transition-shadow duration-300"
-            >
-              <div className="flex items-center mb-6">
-                <div className="seoaudit-feature-icon mr-4">
-                  {category.icon}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    {category.title}
-                  </h3>
-                  <p className="text-gray-600">{category.description}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {category.features.map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-start">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0 text-[hsl(var(--seoaudit-orange))]">
-                      {feature.icon}
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-1">
-                        {feature.name}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 max-w-3xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Ready to grow your online presence?
+        {features.map((category, categoryIndex) => (
+          <div key={categoryIndex} className="mb-20">
+            <h3 className="text-2xl font-semibold text-white mb-8 flex items-center gap-3">
+              <span className="w-1 h-8 bg-gradient-to-b from-violet-500 to-fuchsia-500 rounded-full" />
+              {category.category}
             </h3>
-            <p className="text-gray-600 mb-6">
-              Join 50,000+ marketers and agencies who trust SEOaudit Pro to grow
-              their business.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
-                <Button size="lg" className="seoaudit-button">
-                  Start Your Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/demo">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-gray-300 text-gray-700 hover:border-[hsl(var(--seoaudit-orange))] hover:text-[hsl(var(--seoaudit-orange))]"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {category.items.map((feature, featureIndex) => (
+                <Link
+                  key={featureIndex}
+                  href={feature.href}
+                  className="group p-6 bg-white/5 border border-white/10 rounded-2xl hover:border-violet-500/50 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1"
                 >
-                  Schedule Demo
-                </Button>
-              </Link>
+                  <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} bg-opacity-20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <feature.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
+                    {feature.title}
+                  </h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    {feature.description}
+                  </p>
+                  <div className="flex items-center text-violet-400 text-sm font-medium group-hover:gap-2 transition-all">
+                    Learn more <ArrowRight className="w-4 h-4 ml-1" />
+                  </div>
+                </Link>
+              ))}
             </div>
-            <p className="text-sm text-gray-500 mt-4">
-              No credit card required • 7-day free
-            </p>
           </div>
+        ))}
+
+        <div className="text-center mt-16">
+          <div className="inline-flex p-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl">
+            <Button
+              size="lg"
+              className="bg-transparent hover:bg-white/10 text-white px-8 py-6 h-auto text-lg"
+            >
+              Start Free Trial
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </div>
+          <p className="mt-4 text-gray-500">No credit card required • 7-day free trial</p>
         </div>
       </div>
     </section>

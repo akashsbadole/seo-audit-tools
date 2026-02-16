@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,23 +9,14 @@ import { toast } from '@/components/ui/use-toast';
 
 export default function UpgradePage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
-  const router = useRouter();
 
   const handleUpgrade = async () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/auth/upgrade', {
+      const response = await fetch('/api/upgrade', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       });
 
@@ -38,9 +27,6 @@ export default function UpgradePage() {
           title: "Success!",
           description: "You've been upgraded to Premium! Enjoy unlimited access.",
         });
-        
-        // Update user context
-        window.location.reload();
       } else {
         toast({
           title: "Error",

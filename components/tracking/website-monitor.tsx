@@ -20,7 +20,6 @@ import {
   Globe,
   RefreshCw
 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
 import { toast } from "@/components/ui/use-toast";
 
 interface StatusHistory {
@@ -40,7 +39,6 @@ interface Monitor {
 }
 
 export function WebsiteMonitor() {
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [monitors, setMonitors] = useState<Monitor[]>([]);
   const [newMonitorUrl, setNewMonitorUrl] = useState("");
@@ -52,12 +50,7 @@ export function WebsiteMonitor() {
 
   const fetchMonitors = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/tracking/monitor', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetch('/api/tracking/monitor');
 
       if (response.ok) {
         const data = await response.json();
@@ -89,12 +82,10 @@ export function WebsiteMonitor() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch('/api/tracking/monitor', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           url: newMonitorUrl,
@@ -133,12 +124,10 @@ export function WebsiteMonitor() {
     const newStatus = currentStatus === 'active' ? 'paused' : 'active';
     
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/tracking/monitor/${monitorId}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ status: newStatus })
       });
@@ -163,12 +152,8 @@ export function WebsiteMonitor() {
 
   const deleteMonitor = async (monitorId: string) => {
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(`/api/tracking/monitor/${monitorId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        method: 'DELETE'
       });
 
       if (response.ok) {

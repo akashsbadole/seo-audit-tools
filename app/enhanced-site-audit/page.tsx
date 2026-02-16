@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 import {
   Card,
@@ -91,7 +90,6 @@ interface AuditResult {
 }
 
 export default function EnhancedSiteAuditPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [url, setUrl] = useState("");
   const [competitorUrls, setCompetitorUrls] = useState("");

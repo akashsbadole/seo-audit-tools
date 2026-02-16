@@ -21,10 +21,8 @@ import {
   Code,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/auth-context";
 
 export function PremiumFeatures() {
-  const { user } = useAuth();
   
   const features = [
     {

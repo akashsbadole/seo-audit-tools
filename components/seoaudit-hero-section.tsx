@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight,
   Search,
-  Star,
   Zap,
   TrendingUp,
   Play,
@@ -22,10 +21,20 @@ import {
   Users,
   ArrowDown,
   Loader2,
+  Shield,
+  Target,
+  Layers,
+  Rocket,
+  Eye,
+  Code,
+  Megaphone,
+  Link2,
+  FileText,
+  Smartphone,
+  Database,
 } from "lucide-react";
 import Link from "next/link";
 
-// Form validation schema
 const formSchema = z.object({
   url: z
     .string()
@@ -35,24 +44,27 @@ const formSchema = z.object({
     }),
 });
 
+const tools = [
+  { name: "SEO Audit", icon: Search, color: "from-blue-500 to-cyan-500" },
+  { name: "Keyword Research", icon: Target, color: "from-purple-500 to-pink-500" },
+  { name: "Backlink Analysis", icon: Link2, color: "from-orange-500 to-red-500" },
+  { name: "Competitor Analysis", icon: TrendingUp, color: "from-green-500 to-teal-500" },
+  { name: "Content Analysis", icon: FileText, color: "from-yellow-500 to-orange-500" },
+  { name: "Site Speed", icon: Rocket, color: "from-pink-500 to-rose-500" },
+];
+
 export function SeoauditHeroSection() {
-  const [email, setEmail] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      url: "",
-    },
+    defaultValues: { url: "" },
   });
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -60,7 +72,6 @@ export function SeoauditHeroSection() {
   async function onAnalyze(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      // Encode the URL to handle special characters
       const encodedUrl = encodeURIComponent(values.url);
       router.push(`/audit-results?url=${encodedUrl}`);
     } catch (error) {
@@ -70,214 +81,160 @@ export function SeoauditHeroSection() {
     }
   }
 
-  const features = [
-    {
-      icon: <BarChart3 className="h-6 w-6" />,
-      title: "Advanced Analytics",
-      description: "Deep insights into your website performance",
-    },
-    {
-      icon: <TrendingUp className="h-6 w-6" />,
-      title: "Competitor Intelligence",
-      description: "Analyze and outperform your competitors",
-    },
-    {
-      icon: <Globe className="h-6 w-6" />,
-      title: "Global SEO",
-      description: "Optimize for search engines worldwide",
-    },
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Team Collaboration",
-      description: "Work together with your entire team",
-    },
-  ];
-
   const stats = [
-    { value: "10M+", label: "Keywords analyzed" },
-    { value: "500K+", label: "Websites audited" },
-    { value: "99.9%", label: "Uptime guarantee" },
-    { value: "24/7", label: "Support available" },
+    { value: "50K+", label: "Active Users", icon: Users },
+    { value: "1M+", label: "Audits Completed", icon: BarChart3 },
+    { value: "99.9%", label: "Uptime", icon: Shield },
+    { value: "24/7", label: "Support", icon: Zap },
   ];
 
   return (
-    <div className="relative bg-gradient-to-br from-gray-50 to-white overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[hsl(var(--seoaudit-orange))]/10 to-[hsl(var(--seoaudit-light-blue))]/10 rounded-full filter blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-[hsl(var(--seoaudit-light-blue))]/10 to-transparent rounded-full filter blur-3xl"></div>
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0f]">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        {/* Gradient Orbs */}
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-r from-cyan-500/20 to-blue-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-indigo-600/10 to-purple-600/10 rounded-full blur-[150px]" />
+        
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]" />
       </div>
 
-      <div className="seoaudit-container seoaudit-section-padding">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left content */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <Badge className="px-3 py-1 text-sm bg-[hsl(var(--seoaudit-orange))]/10 text-[hsl(var(--seoaudit-orange))] border-[hsl(var(--seoaudit-orange))]/20">
-                <Sparkles className="mr-2 h-4 w-4" />
-                Trusted by 50,000+ Marketing Professionals
-              </Badge>
-
-              <h1 className="seoaudit-heading">
-                <span className="seoaudit-gradient-text">
-                  Online Visibility
-                </span>
-                <br />
-                Made Simple
-              </h1>
-
-              <p className="seoaudit-subheading">
-                Get 55+ tools for SEO, content marketing, competitor research,
-                PPC, and social media marketing in one platform.
-              </p>
-            </div>
-
-            {/* URL Input Form */}
-            <form
-              onSubmit={form.handleSubmit(onAnalyze)}
-              className="bg-white rounded-xl shadow-lg border border-gray-200 p-6"
-            >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="url-input"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Enter your website URL to get started
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="url-input"
-                      type="url"
-                      placeholder="https://example.com"
-                      {...form.register("url")}
-                      className="flex-1 border-gray-300 focus:border-[hsl(var(--seoaudit-orange))] focus:ring-[hsl(var(--seoaudit-orange))]"
-                    />
-                    <Button
-                      type="submit"
-                      className="seoaudit-button whitespace-nowrap"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Analyzing...
-                        </>
-                      ) : (
-                        <>
-                          Analyze
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  {form.formState.errors.url && (
-                    <p className="text-sm text-red-600">
-                      {form.formState.errors.url.message}
-                    </p>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  No credit card required • Free 7-day
-                </p>
+      <div className="relative z-10">
+        {/* Top Bar */}
+        <div className="border-b border-white/10 bg-black/20 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-gray-400">
+                <Sparkles className="w-4 h-4 text-violet-400" />
+                <span>New: AI-powered content analysis now available</span>
               </div>
-            </form>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signup">
-                <Button size="lg" className="seoaudit-button">
-                  Start Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
+              <div className="flex items-center gap-4">
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">Documentation</a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">Support</a>
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                  Log in
                 </Button>
-              </Link>
-
-              <Link href="#demo">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-gray-300 text-gray-700 hover:border-[hsl(var(--seoaudit-orange))] hover:text-[hsl(var(--seoaudit-orange))]"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  Watch Demo
-                </Button>
-              </Link>
-            </div>
-
-            {/* Trust indicators */}
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                No setup fee
               </div>
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                Cancel anytime
-              </div>
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                24/7 support
-              </div>
-            </div>
-          </div>
-
-          {/* Right content */}
-          <div className="space-y-8">
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-6">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="text-center p-6 bg-white rounded-xl shadow-sm border border-gray-100"
-                >
-                  <div className="text-3xl font-bold text-gray-900 mb-1">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Feature cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {features.map((feature, index) => (
-                <div key={index} className="seoaudit-card">
-                  <div className="flex items-start space-x-3">
-                    <div className="seoaudit-feature-icon flex-shrink-0">
-                      {feature.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">
-                        {feature.title}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {feature.description}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex items-center justify-center p-2 bg-[hsl(var(--seoaudit-orange))]/10 rounded-full mb-4">
-            <ArrowDown className="h-6 w-6 text-[hsl(var(--seoaudit-orange))]" />
-          </div>
-          <p className="text-lg text-gray-600 mb-4">
-            Join thousands of businesses growing with SEOaudit Pro
-          </p>
-          <Link href="#features">
-            <Button
-              variant="ghost"
-              className="text-[hsl(var(--seoaudit-orange))] hover:text-[hsl(var(--seoaudit-orange))] hover:bg-[hsl(var(--seoaudit-orange))]/10 font-medium"
+        {/* Main Hero */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
+          <div className="text-center mb-12">
+            <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 border border-violet-500/30 text-violet-300 hover:bg-violet-600/30">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Trusted by 50,000+ SEO Professionals
+            </Badge>
+            
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              <span className="text-white">Supercharge Your</span>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400">
+                SEO Strategy
+              </span>
+            </h1>
+            
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+              All-in-one SEO platform with 50+ tools for keyword research, 
+              competitor analysis, site audits, and more. Start growing your organic traffic today.
+            </p>
+
+            {/* Search Form */}
+            <form
+              onSubmit={form.handleSubmit(onAnalyze)}
+              className="max-w-2xl mx-auto mb-8"
             >
-              Explore all features
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+              <div className="flex flex-col sm:flex-row gap-3 p-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
+                <div className="relative flex-1">
+                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    type="url"
+                    placeholder="Enter your website URL"
+                    {...form.register("url")}
+                    className="pl-12 h-14 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-violet-500 focus:ring-violet-500 rounded-xl text-lg"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={isLoading}
+                  className="h-14 px-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      Analyze Site
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </div>
+              {form.formState.errors.url && (
+                <p className="mt-2 text-red-400 text-sm">{form.formState.errors.url.message}</p>
+              )}
+            </form>
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span>Free 7-day trial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span>Cancel anytime</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                className="p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-center hover:bg-white/10 transition-all duration-300"
+              >
+                <stat.icon className="w-6 h-6 mx-auto mb-2 text-violet-400" />
+                <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-gray-400 text-sm">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tools Preview */}
+          <div className="text-center mb-8">
+            <p className="text-gray-500 mb-6">Powerful tools to boost your SEO</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {tools.map((tool, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${tool.color} bg-opacity-10 border border-white/10 rounded-full text-white text-sm hover:scale-105 transition-transform cursor-pointer`}
+                >
+                  <tool.icon className="w-4 h-4" />
+                  {tool.name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="text-center">
+            <div className="inline-flex flex-col items-center text-gray-500 animate-bounce">
+              <span className="text-sm mb-2">Explore all features</span>
+              <ArrowDown className="w-5 h-5" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

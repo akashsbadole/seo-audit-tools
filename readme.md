@@ -1,12 +1,12 @@
 # SEO Audit Tools
 
-A comprehensive SEO audit and analysis platform built with Next.js, Prisma, and Clerk authentication.
+A comprehensive SEO audit and analysis platform built with Next.js and Prisma.
 
 ## Features
 
 ### 1. User Management
 
-- Secure authentication via Clerk
+- Secure authentication
 - Usage tracking for free reports and searches
 - Premium user status management
 - Personalized dashboard
@@ -73,7 +73,6 @@ A comprehensive SEO audit and analysis platform built with Next.js, Prisma, and 
 - **Frontend**: Next.js, React, Tailwind CSS
 - **Backend**: Next.js API Routes
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: Clerk
 - **UI Components**: Custom components with shadcn/ui
 - **Icons**: Lucide React
 
@@ -87,8 +86,6 @@ A comprehensive SEO audit and analysis platform built with Next.js, Prisma, and 
 3. Set up environment variables:
    ```env
    DATABASE_URL="your-postgresql-url"
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="your-clerk-key"
-   CLERK_SECRET_KEY="your-clerk-secret"
    ```
 4. Run database migrations:
    ```bash

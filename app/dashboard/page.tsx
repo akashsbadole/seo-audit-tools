@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 import {
   Card,
@@ -43,7 +42,6 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalAnalyses: 0,
     premiumAnalyses: 0,

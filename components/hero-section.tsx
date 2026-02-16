@@ -3,11 +3,9 @@ import { ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 
 export function HeroSection() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
     targetId: string

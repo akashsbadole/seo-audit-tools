@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const timeRange = searchParams.get('timeRange') || '7d';
 
-    // Calculate date range based on timeRange
     const now = new Date();
     let startDate = new Date();
     
@@ -35,103 +26,70 @@ export async function GET(request: NextRequest) {
         startDate.setDate(startDate.getDate() - 7);
     }
 
-    // Get user's audits and related data
     const audits = await prisma.audit.findMany({
       where: {
-        user: {
-          email: session.user.email
-        },
-        createdAt: {
-          gte: startDate
-        }
+        createdAt: { gte: startDate }
       },
       include: {
         seoIssues: true,
         performanceMetrics: true
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Get website monitoring data
     const monitoringData = await prisma.websiteMonitor.findMany({
       where: {
-        user: {
-          email: session.user.email
-        },
-        createdAt: {
-          gte: startDate
-        }
+        createdAt: { gte: startDate }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Get AI analyses
     const aiAnalyses = await prisma.aIAnalysis.findMany({
       where: {
-        user: {
-          email: session.user.email
-        },
-        createdAt: {
-          gte: startDate
-        }
+        createdAt: { gte: startDate }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Get competitor analyses
     const competitorAnalyses = await prisma.competitorAnalysis.findMany({
       where: {
-        user: {
-          email: session.user.email
-        },
-        createdAt: {
-          gte: startDate
-        }
+        createdAt: { gte: startDate }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Calculate analytics metrics
     const analyticsData = {
       traffic: {
-        visitors: Math.floor(Math.random() * 10000) + 5000, // Simulated data
-        pageViews: Math.floor(Math.random() * 50000) + 25000, // Simulated data
-        bounceRate: Math.floor(Math.random() * 30) + 30, // 30-60%
-        avgSessionDuration: Math.floor(Math.random() * 180) + 120, // 2-5 minutes
-        visitorsGrowth: Math.floor(Math.random() * 40) - 10, // -10% to +30%
-        pageViewsGrowth: Math.floor(Math.random() * 50) - 15, // -15% to +35%
+        visitors: Math.floor(Math.random() * 10000) + 5000,
+        pageViews: Math.floor(Math.random() * 50000) + 25000,
+        bounceRate: Math.floor(Math.random() * 30) + 30,
+        avgSessionDuration: Math.floor(Math.random() * 180) + 120,
+        visitorsGrowth: Math.floor(Math.random() * 40) - 10,
+        pageViewsGrowth: Math.floor(Math.random() * 50) - 15,
       },
       seo: {
-        keywordRankings: Math.floor(Math.random() * 500) + 100, // Simulated data
-        organicTraffic: Math.floor(Math.random() * 8000) + 2000, // Simulated data
-        backlinks: Math.floor(Math.random() * 1000) + 200, // Simulated data
-        domainAuthority: Math.floor(Math.random() * 30) + 40, // 40-70
-        rankingsGrowth: Math.floor(Math.random() * 20) - 5, // -5% to +15%
-        trafficGrowth: Math.floor(Math.random() * 30) - 10, // -10% to +20%
+        keywordRankings: Math.floor(Math.random() * 500) + 100,
+        organicTraffic: Math.floor(Math.random() * 8000) + 2000,
+        backlinks: Math.floor(Math.random() * 1000) + 200,
+        domainAuthority: Math.floor(Math.random() * 30) + 40,
+        rankingsGrowth: Math.floor(Math.random() * 20) - 5,
+        trafficGrowth: Math.floor(Math.random() * 30) - 10,
       },
       performance: {
-        pageLoadTime: Math.random() * 3 + 1, // 1-4 seconds
-        firstContentfulPaint: Math.random() * 2 + 0.5, // 0.5-2.5 seconds
-        largestContentfulPaint: Math.random() * 3 + 1.5, // 1.5-4.5 seconds
-        cumulativeLayoutShift: Math.random() * 0.3, // 0-0.3
-        uptime: Math.floor(Math.random() * 100) + 900, // 900-1000 hours
-        uptimePercentage: Math.floor(Math.random() * 5) + 95, // 95-100%
+        pageLoadTime: Math.random() * 3 + 1,
+        firstContentfulPaint: Math.random() * 2 + 0.5,
+        largestContentfulPaint: Math.random() * 3 + 1.5,
+        cumulativeLayoutShift: Math.random() * 0.3,
+        uptime: Math.floor(Math.random() * 100) + 900,
+        uptimePercentage: Math.floor(Math.random() * 5) + 95,
       },
       conversion: {
-        conversionRate: Math.random() * 5 + 1, // 1-6%
-        goalCompletions: Math.floor(Math.random() * 100) + 20, // 20-120
-        costPerAcquisition: Math.floor(Math.random() * 100) + 50, // $50-150
-        returnOnInvestment: Math.floor(Math.random() * 300) + 100, // 100-400%
-        conversionGrowth: Math.floor(Math.random() * 20) - 5, // -5% to +15%
-        roiGrowth: Math.floor(Math.random() * 50) - 10, // -10% to +40%
+        conversionRate: Math.random() * 5 + 1,
+        goalCompletions: Math.floor(Math.random() * 100) + 20,
+        costPerAcquisition: Math.floor(Math.random() * 100) + 50,
+        returnOnInvestment: Math.floor(Math.random() * 300) + 100,
+        conversionGrowth: Math.floor(Math.random() * 20) - 5,
+        roiGrowth: Math.floor(Math.random() * 50) - 10,
       },
       charts: {
         trafficChart: generateTrafficChart(timeRange),
@@ -162,7 +120,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Helper functions to generate chart data
 function generateTrafficChart(timeRange: string) {
   const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
   return Array.from({ length: points }, (_, i) => ({

@@ -1,27 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyRecaptcha } from '@/lib/recaptcha';
-import { checkUsageLimit, incrementUsage } from '@/lib/middleware/usageLimit';
-
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user?.email) {
-    return NextResponse.json(
-      { error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
-
-  const usageCheck = await checkUsageLimit('search');
-  if (!usageCheck.allowed) {
-    return NextResponse.json(
-      { error: usageCheck.message },
-      { status: 403 }
-    );
-  }
-
   const recaptchaToken = request.headers.get('X-Recaptcha-Token');
 
   if (!recaptchaToken) {
@@ -40,13 +21,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Log the request headers for debugging
-    // console.log('Request headers:', Object.fromEntries(request.headers.entries()));
-
     const body = await request.json();
     console.log('Raw request body:', body);
 
-    // Validate required fields
     const { keyword, platform, searchType, country, language, results } = body;
 
     if (!keyword || !platform || !searchType || !country || !language || !results) {
@@ -63,7 +40,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save to database
     const savedSearch = await prisma.keywordSearch.create({
       data: {
         keyword: String(keyword),
@@ -71,27 +47,21 @@ export async function POST(request: Request) {
         searchType: String(searchType),
         country: String(country),
         language: String(language),
-        results: results,
-        userId: session.user.id
+        results: results
       }
     });
-
-    // Increment usage after successful save
-    await incrementUsage('search', session.user.id);
 
     return NextResponse.json({
       success: true,
       data: savedSearch
     });
   } catch (error) {
-    // Log the full error details
     console.error('Detailed error saving keyword search:', {
       error,
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });
 
-    // Return a proper JSON response with error details
     return NextResponse.json(
       { 
         error: 'Failed to save keyword search',
@@ -105,4 +75,4 @@ export async function POST(request: Request) {
       }
     );
   }
-} 
+}

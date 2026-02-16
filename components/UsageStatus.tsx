@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { useAuth } from "@/contexts/auth-context";
 
 interface UsageStatus {
   freeReportsUsed: number;
@@ -11,21 +10,13 @@ interface UsageStatus {
 }
 
 export function UsageStatus() {
-  const { user } = useAuth();
   const [usage, setUsage] = useState<UsageStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUsage() {
-      if (!user?.email) return;
-
       try {
-        const token = localStorage.getItem('auth_token');
-        const response = await fetch("/api/usage", {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await fetch("/api/usage");
         const data = await response.json();
         setUsage(data);
       } catch (error) {
@@ -36,11 +27,7 @@ export function UsageStatus() {
     }
 
     fetchUsage();
-  }, [user]);
-
-  if (!user) {
-    return null;
-  }
+  }, []);
 
   if (loading) {
     return <div className="text-sm text-gray-500">Loading usage status...</div>;
@@ -51,9 +38,6 @@ export function UsageStatus() {
       <div className="text-sm text-gray-500">Error loading usage status</div>
     );
   }
-
-  const reportsRemaining = Math.max(0, 10 - usage.freeReportsUsed);
-  const searchesRemaining = Math.max(0, 10 - usage.freeSearchesUsed);
 
   return (
     <div className="space-y-4 p-4 bg-white rounded-lg shadow">
@@ -68,13 +52,13 @@ export function UsageStatus() {
           <div className="flex justify-between items-center">
             <span>Free Reports:</span>
             <span className="font-medium">
-              {reportsRemaining} of 10 remaining
+              {Math.max(0, 10 - usage.freeReportsUsed)} of 10 remaining
             </span>
           </div>
           <div className="flex justify-between items-center">
             <span>Free Searches:</span>
             <span className="font-medium">
-              {searchesRemaining} of 10 remaining
+              {Math.max(0, 10 - usage.freeSearchesUsed)} of 10 remaining
             </span>
           </div>
 

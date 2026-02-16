@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 import {
   Card,
@@ -90,7 +89,6 @@ interface OptimizationResult {
 }
 
 export default function WritingAssistantPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [content, setContent] = useState("");
   const [targetKeyword, setTargetKeyword] = useState("");

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,7 +25,6 @@ import {
 } from "lucide-react";
 
 export default function KeywordResearchPage() {
-  const { user } = useAuth();
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("us");
   const [language, setLanguage] = useState("en");

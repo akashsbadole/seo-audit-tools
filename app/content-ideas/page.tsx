@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 import {
   Card,
@@ -71,7 +70,6 @@ interface ContentIdea {
 }
 
 export default function ContentIdeasPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
   const [keywords, setKeywords] = useState("");

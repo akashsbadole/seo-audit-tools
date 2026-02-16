@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 import {
   Card,
@@ -77,7 +76,6 @@ interface TrackingData {
 }
 
 export default function PositionTrackingPage() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [domain, setDomain] = useState("");
   const [keywords, setKeywords] = useState("");

@@ -18,7 +18,6 @@ import {
   RefreshCw,
   Loader2
 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
 import { toast } from "@/components/ui/use-toast";
 
 interface AIAnalysis {
@@ -37,7 +36,6 @@ interface AIAnalysis {
 }
 
 export function ContentAnalyzer() {
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [url, setUrl] = useState("");
   const [analysisType, setAnalysisType] = useState<"seo" | "content" | "keywords">("seo");

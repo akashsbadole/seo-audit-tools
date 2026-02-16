@@ -21,80 +21,71 @@ export function SeoauditPricing() {
 
   const plans = [
     {
-      name: "Pro",
-      description: "For freelancers and startups",
-      icon: <Star className="h-6 w-6" />,
-      monthlyPrice: 129.95,
-      annualPrice: 108.33,
+      name: "Starter",
+      description: "Perfect for individuals and small projects",
+      icon: Star,
+      color: "from-blue-500 to-cyan-500",
+      monthlyPrice: 0,
+      annualPrice: 0,
       badge: null,
       features: [
-        "5 projects",
-        "500 keywords to track",
-        "10,000 results per report",
-        "3,000 pages to crawl",
-        "100 social profiles",
-        "50 PDF reports per day",
-        "Historical data (1 month)",
-        "Competitor intelligence",
-        "Content marketing tools",
-        "Basic API access",
+        "5 website audits",
+        "100 keywords tracking",
+        "1,000 pages to crawl",
+        "Basic SEO analysis",
+        "PDF reports (5/month)",
+        "Email support",
       ],
       notIncluded: [
-        "Multi-user management",
+        "Competitor analysis",
+        "API access",
         "White label reports",
-        "Dedicated account manager",
-        "Advanced API access",
       ],
     },
     {
-      name: "Guru",
-      description: "For marketing agencies and SMBs",
-      icon: <Zap className="h-6 w-6" />,
-      monthlyPrice: 249.95,
-      annualPrice: 208.33,
+      name: "Pro",
+      description: "For freelancers and growing businesses",
+      icon: Zap,
+      color: "from-violet-500 to-fuchsia-500",
+      monthlyPrice: 49.99,
+      annualPrice: 39.99,
       badge: "Most Popular",
       features: [
-        "15 projects",
-        "1,500 keywords to track",
-        "30,000 results per report",
-        "Unlimited pages to crawl",
-        "300 social profiles",
-        "300 PDF reports per day",
-        "Historical data (6 months)",
-        "Competitor intelligence",
-        "Content marketing tools",
-        "Advanced API access",
-        "Multi-user management (3 users)",
-        "Google Data Studio integration",
-        "Looker Studio integration",
+        "Unlimited audits",
+        "5,000 keywords tracking",
+        "50,000 pages to crawl",
+        "Advanced SEO analysis",
+        "Competitor analysis",
+        "Unlimited PDF reports",
+        "API access",
+        "Priority support",
+        "Rank tracking",
+        "Backlink analysis",
       ],
-      notIncluded: ["White label reports", "Dedicated account manager"],
+      notIncluded: [
+        "White label reports",
+        "Team management",
+      ],
     },
     {
       name: "Business",
-      description: "For large enterprises",
-      icon: <Crown className="h-6 w-6" />,
-      monthlyPrice: 499.95,
-      annualPrice: 416.66,
+      description: "For agencies and enterprises",
+      icon: Crown,
+      color: "from-amber-500 to-orange-500",
+      monthlyPrice: 149.99,
+      annualPrice: 119.99,
       badge: null,
       features: [
-        "40 projects",
-        "5,000 keywords to track",
-        "50,000 results per report",
+        "Everything in Pro",
+        "Unlimited keywords",
         "Unlimited pages to crawl",
-        "500 social profiles",
-        "Unlimited PDF reports",
-        "Historical data (2 years)",
-        "Competitor intelligence",
-        "Content marketing tools",
-        "Advanced API access",
-        "Multi-user management (unlimited users)",
-        "Google Data Studio integration",
-        "Looker Studio integration",
         "White label reports",
+        "Team management (10 users)",
+        "Custom integrations",
         "Dedicated account manager",
-        "Custom limits",
-        "Product training",
+        "SLA guarantee",
+        "Custom API limits",
+        "Advanced analytics",
       ],
       notIncluded: [],
     },
@@ -103,115 +94,105 @@ export function SeoauditPricing() {
   const faqs = [
     {
       question: "Can I change my plan later?",
-      answer:
-        "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
+      answer: "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
     },
     {
-      question: "Is there a free   available?",
-      answer:
-        "Yes, we offer a 7-day free   for all new users. No credit card required to start your  .",
+      question: "Is there a free trial?",
+      answer: "Yes, we offer a 14-day free trial for all new users. No credit card required to start.",
     },
     {
       question: "What payment methods do you accept?",
-      answer:
-        "We accept all major credit cards, PayPal, and bank transfers for annual plans.",
+      answer: "We accept all major credit cards, PayPal, and bank transfers for annual plans.",
     },
     {
       question: "Can I cancel my subscription anytime?",
-      answer:
-        "Yes, you can cancel your subscription at any time. Your access will continue until the end of your billing period.",
+      answer: "Yes, you can cancel your subscription at any time. Your access will continue until the end of your billing period.",
     },
   ];
 
   return (
-    <section id="pricing" className="bg-white py-20">
-      <div className="seoaudit-container">
-        {/* Header */}
+    <section id="pricing" className="py-24 bg-[#0a0a0f] relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-violet-600/10 to-transparent rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-fuchsia-600/10 to-transparent rounded-full blur-[100px]" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-          <Badge className="mb-4 px-3 py-1 text-sm bg-[hsl(var(--seoaudit-orange))]/10 text-[hsl(var(--seoaudit-orange))] border-[hsl(var(--seoaudit-orange))]/20">
-            <Building className="mr-2 h-4 w-4" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-gray-400 mb-6">
+            <Building className="w-4 h-4 text-violet-400" />
             Pricing Plans
-          </Badge>
-
-          <h2 className="seoaudit-heading mb-6">
-            Choose the Right Plan for Your{" "}
-            <span className="seoaudit-gradient-text">Business</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Simple, Transparent
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400"> Pricing</span>
           </h2>
-
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Whether you're a freelancer, agency, or enterprise, we have a plan
-            that fits your needs.
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+            Choose the perfect plan for your SEO needs. All plans include a 14-day free trial.
           </p>
 
-          {/* Billing Toggle */}
           <div className="flex items-center justify-center mb-8">
-            <span
-              className={`mr-3 font-medium ${!isAnnual ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Monthly billing
+            <span className={`mr-4 font-medium ${!isAnnual ? "text-white" : "text-gray-500"}`}>
+              Monthly
             </span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isAnnual ? "bg-[hsl(var(--seoaudit-orange))]" : "bg-gray-200"
+              className={`relative w-14 h-7 rounded-full transition-colors ${
+                isAnnual ? "bg-gradient-to-r from-violet-600 to-fuchsia-600" : "bg-gray-700"
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  isAnnual ? "translate-x-6" : "translate-x-1"
+                className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
+                  isAnnual ? "left-8" : "left-1"
                 }`}
               />
             </button>
-            <span
-              className={`ml-3 font-medium ${isAnnual ? "text-gray-900" : "text-gray-500"}`}
-            >
-              Annual billing
-              <span className="ml-2 text-sm text-green-600 font-semibold">
-                Save 17%
-              </span>
+            <span className={`ml-4 font-medium ${isAnnual ? "text-white" : "text-gray-500"}`}>
+              Annual
+              <span className="ml-2 text-sm text-green-400 font-semibold">Save 20%</span>
             </span>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative bg-white rounded-2xl border-2 ${
+              className={`relative p-8 bg-white/5 border backdrop-blur-md rounded-2xl transition-all duration-300 hover:-translate-y-2 ${
                 plan.badge
-                  ? "border-[hsl(var(--seoaudit-orange))] shadow-xl"
-                  : "border-gray-200"
-              } p-8 hover:shadow-lg transition-all duration-300`}
+                  ? "border-violet-500/50 bg-white/10"
+                  : "border-white/10 hover:border-white/20"
+              }`}
             >
               {plan.badge && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <Badge className="px-4 py-1 text-sm bg-[hsl(var(--seoaudit-orange))] text-white">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="px-4 py-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-medium rounded-full">
                     {plan.badge}
-                  </Badge>
+                  </span>
                 </div>
               )}
 
               <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-[hsl(var(--seoaudit-orange))]/10 rounded-full text-[hsl(var(--seoaudit-orange))] mb-4">
-                  {plan.icon}
+                <div className={`w-14 h-14 mx-auto mb-4 bg-gradient-to-r ${plan.color} bg-opacity-20 rounded-2xl flex items-center justify-center`}>
+                  <plan.icon className="w-7 h-7 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-gray-600 mb-4">{plan.description}</p>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
-                    $
-                    {isAnnual
-                      ? plan.annualPrice.toFixed(2)
-                      : plan.monthlyPrice.toFixed(2)}
-                  </span>
-                  <span className="text-gray-600">/month</span>
+                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <p className="text-gray-400 text-sm mb-4">{plan.description}</p>
+                <div className="mb-2">
+                  {plan.monthlyPrice === 0 ? (
+                    <div className="text-4xl font-bold text-white">Free</div>
+                  ) : (
+                    <>
+                      <span className="text-4xl font-bold text-white">
+                        ${isAnnual ? plan.annualPrice : plan.monthlyPrice}
+                      </span>
+                      <span className="text-gray-400">/month</span>
+                    </>
+                  )}
                 </div>
-                {isAnnual && (
-                  <p className="text-sm text-green-600 font-medium">
-                    ${(plan.monthlyPrice * 12).toFixed(2)} billed annually
+                {isAnnual && plan.monthlyPrice > 0 && (
+                  <p className="text-sm text-gray-500">
+                    Billed ${(isAnnual ? plan.annualPrice : plan.monthlyPrice) * 12}/year
                   </p>
                 )}
               </div>
@@ -221,36 +202,32 @@ export function SeoauditPricing() {
                   size="lg"
                   className={`w-full ${
                     plan.badge
-                      ? "seoaudit-button"
-                      : "border-2 border-gray-300 text-gray-700 hover:border-[hsl(var(--seoaudit-orange))] hover:text-[hsl(var(--seoaudit-orange))]"
+                      ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white"
+                      : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
                   }`}
-                  variant={plan.badge ? "default" : "outline"}
                 >
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  {plan.monthlyPrice === 0 ? "Get Started Free" : "Start Free Trial"}
+                  <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
 
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">
-                  What's included:
-                </h4>
+              <div className="space-y-3">
                 {plan.features.map((feature, featureIndex) => (
-                  <div key={featureIndex} className="flex items-start">
-                    <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700">{feature}</span>
+                  <div key={featureIndex} className="flex items-center">
+                    <Check className="w-5 h-5 text-green-400 mr-3 flex-shrink-0" />
+                    <span className="text-gray-300 text-sm">{feature}</span>
                   </div>
                 ))}
 
                 {plan.notIncluded.length > 0 && (
                   <>
-                    <h4 className="font-semibold text-gray-900 pt-4">
-                      Not included:
-                    </h4>
+                    <div className="pt-2">
+                      <p className="text-gray-500 text-xs uppercase tracking-wider mb-2">Not included</p>
+                    </div>
                     {plan.notIncluded.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-start">
-                        <X className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-500">{feature}</span>
+                      <div key={featureIndex} className="flex items-center">
+                        <X className="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" />
+                        <span className="text-gray-500 text-sm">{feature}</span>
                       </div>
                     ))}
                   </>
@@ -260,48 +237,16 @@ export function SeoauditPricing() {
           ))}
         </div>
 
-        {/* Enterprise CTA */}
-        <div className="bg-gray-50 rounded-2xl p-8 text-center mb-16">
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              Need a custom solution?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              We offer custom plans for large organizations with specific needs.
-              Contact our sales team to discuss your requirements.
-            </p>
-            <Link href="/contact">
-              <Button size="lg" className="seoaudit-button">
-                Contact Sales
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* FAQ */}
-        <div className="max-w-3xl mx-auto">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">
-            Frequently Asked Questions
-          </h3>
-          <div className="space-y-6">
-            {faqs.map((faq, index) => (
-              <div
-                key={index}
-                className="bg-white border border-gray-200 rounded-lg p-6"
-              >
-                <div className="flex items-start">
-                  <HelpCircle className="h-5 w-5 text-[hsl(var(--seoaudit-orange))] mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      {faq.question}
-                    </h4>
-                    <p className="text-gray-600">{faq.answer}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Need a custom solution for your organization?</p>
+          <Button
+            variant="outline"
+            size="lg"
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            Contact Sales
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
         </div>
       </div>
     </section>

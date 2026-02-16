@@ -21,7 +21,6 @@ import {
   AlertCircle,
   Download
 } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
 import { toast } from "@/components/ui/use-toast";
 
 interface CompetitorData {
@@ -48,7 +47,6 @@ interface AnalysisResult {
 }
 
 export function CompetitorAnalysis() {
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [targetUrl, setTargetUrl] = useState("");
   const [competitorUrls, setCompetitorUrls] = useState(["", "", "", ""]);
