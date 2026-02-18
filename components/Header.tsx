@@ -56,9 +56,9 @@ const DropdownMenu = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Link href="/signup">
+            <Link href="/#features">
               <button className="px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm">
-                Start Free
+                Explore Tools
               </button>
             </Link>
 

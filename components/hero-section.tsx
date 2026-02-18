@@ -43,22 +43,6 @@ export function HeroSection() {
             </Button>
           </Link>
 
-          {/* Custom Auth Buttons */}
-          {!user && (
-            <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-4">
-              <Link href="/login">
-                <Button variant="outline" className="w-40">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button className="w-40 bg-indigo-700 text-white hover:bg-indigo-800">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-          )}
-
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link href="/keyword-research" className="group">
               <div className="p-4 bg-indigo-800/50 rounded-lg hover:bg-blue-800/70 transition-colors shadow">

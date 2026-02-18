@@ -208,30 +208,6 @@ export default function DashboardPage() {
   ];
 
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Settings className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>
-              Please log in to access your dashboard
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => (window.location.href = "/login")}
-              className="w-full"
-            >
-              Login to Continue
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -250,10 +226,10 @@ export default function DashboardPage() {
         <div className="mb-8 flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome back, {user.name || user.email}!
+              Welcome back, Guest!
             </h1>
             <p className="text-gray-600">
-              {user.isPremium
+              {true
                 ? "Access your premium SEO tools and analytics"
                 : "Upgrade to premium to unlock all features"}
             </p>
@@ -307,7 +283,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.premiumAnalyses}</div>
               <p className="text-xs text-muted-foreground">
-                {user.isPremium ? "Full access" : "Limited access"}
+                {true ? "Full access" : "Limited access"}
               </p>
             </CardContent>
           </Card>
@@ -333,7 +309,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.apiCalls}</div>
               <p className="text-xs text-muted-foreground">
-                {user.isPremium
+                {true
                   ? "Unlimited"
                   : `${1000 - stats.apiCalls} remaining`}
               </p>
@@ -366,7 +342,7 @@ export default function DashboardPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {user.isPremium ? (
+                  {true ? (
                     <Link href={feature.href}>
                       <Button className="w-full">
                         Use Tool
@@ -388,7 +364,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upgrade Banner for Non-Premium Users */}
-        {!user.isPremium && (
+        {!true && (
           <Card className="mb-8 bg-gradient-to-r from-[hsl(var(--seoaudit-orange))/10] to-[hsl(var(--seoaudit-orange))/5] border-[hsl(var(--seoaudit-orange))]/20">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -488,7 +464,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Usage Stats */}
-          {user.isPremium && (
+          {true && (
             <Card>
               <CardHeader>
                 <CardTitle>Usage Stats</CardTitle>

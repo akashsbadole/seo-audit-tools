@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,38 +24,6 @@ export async function GET(request: NextRequest) {
       default:
         startDate.setDate(startDate.getDate() - 7);
     }
-
-    const audits = await prisma.audit.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      include: {
-        seoIssues: true,
-        performanceMetrics: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const monitoringData = await prisma.websiteMonitor.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const aiAnalyses = await prisma.aIAnalysis.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    const competitorAnalyses = await prisma.competitorAnalysis.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
 
     const analyticsData = {
       traffic: {
@@ -91,22 +58,13 @@ export async function GET(request: NextRequest) {
         conversionGrowth: Math.floor(Math.random() * 20) - 5,
         roiGrowth: Math.floor(Math.random() * 50) - 10,
       },
-      charts: {
-        trafficChart: generateTrafficChart(timeRange),
-        keywordChart: generateKeywordChart(timeRange),
-        performanceChart: generatePerformanceChart(timeRange),
-        conversionChart: generateConversionChart(timeRange),
-      },
       summary: {
-        totalAudits: audits.length,
-        totalMonitoring: monitoringData.length,
-        totalAIAnalyses: aiAnalyses.length,
-        totalCompetitorAnalyses: competitorAnalyses.length,
-        activeIssues: audits.reduce((sum, audit) => sum + (audit.seoIssues?.length || 0), 0),
-        avgPerformanceScore: audits.reduce((sum, audit) => {
-          const score = audit.performanceMetrics?.[0]?.score || 0;
-          return sum + score;
-        }, 0) / (audits.length || 1),
+        totalAudits: 0,
+        totalMonitoring: 0,
+        totalAIAnalyses: 0,
+        totalCompetitorAnalyses: 0,
+        activeIssues: 0,
+        avgPerformanceScore: 0,
       }
     };
 
@@ -118,40 +76,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-function generateTrafficChart(timeRange: string) {
-  const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-  return Array.from({ length: points }, (_, i) => ({
-    date: new Date(Date.now() - (points - i) * (timeRange === '24h' ? 3600000 : 86400000)).toISOString(),
-    visitors: Math.floor(Math.random() * 1000) + 500,
-    pageViews: Math.floor(Math.random() * 5000) + 2000,
-  }));
-}
-
-function generateKeywordChart(timeRange: string) {
-  const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-  return Array.from({ length: points }, (_, i) => ({
-    date: new Date(Date.now() - (points - i) * (timeRange === '24h' ? 3600000 : 86400000)).toISOString(),
-    rankings: Math.floor(Math.random() * 50) + 100,
-    positions: Math.floor(Math.random() * 20) + 10,
-  }));
-}
-
-function generatePerformanceChart(timeRange: string) {
-  const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-  return Array.from({ length: points }, (_, i) => ({
-    date: new Date(Date.now() - (points - i) * (timeRange === '24h' ? 3600000 : 86400000)).toISOString(),
-    loadTime: Math.random() * 2 + 1,
-    score: Math.floor(Math.random() * 30) + 70,
-  }));
-}
-
-function generateConversionChart(timeRange: string) {
-  const points = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-  return Array.from({ length: points }, (_, i) => ({
-    date: new Date(Date.now() - (points - i) * (timeRange === '24h' ? 3600000 : 86400000)).toISOString(),
-    rate: Math.random() * 5 + 1,
-    conversions: Math.floor(Math.random() * 20) + 5,
-  }));
 }

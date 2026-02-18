@@ -104,55 +104,6 @@ export default function BacklinkAnalyticsPage() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Link2 className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>
-              Please log in to access the backlink analytics tool
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => (window.location.href = "/login")}
-              className="w-full"
-            >
-              Login to Continue
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium && results) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <BarChart3 className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Backlink analytics is a premium feature. Upgrade to unlock full
-              access.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => (window.location.href = "/upgrade")}
-              className="w-full"
-            >
-              Upgrade to Premium
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="seoaudit-container">

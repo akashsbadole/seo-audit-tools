@@ -441,16 +441,13 @@ export function AuditResults({ url }: { url: string }) {
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild>
-                <a href="/signup">Create Free Account</a>
-              </Button>
-              <Button variant="outline" asChild>
-                <a href="/login">Sign In</a>
+                <span>All features are free</span>
               </Button>
             </div>
             <div className="mt-4 text-sm text-muted-foreground">
-              <p>With an account, you can:</p>
+              <p>With our platform, you can:</p>
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Save unlimited audit results</li>
+                <li>Run unlimited SEO audits</li>
                 <li>Track SEO improvements over time</li>
                 <li>Compare historical performance</li>
                 <li>Export reports with your branding</li>

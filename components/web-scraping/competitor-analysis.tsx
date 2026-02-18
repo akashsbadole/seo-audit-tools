@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,7 @@ interface AnalysisResult {
 }
 
 export function CompetitorAnalysis() {
+  
   const [isLoading, setIsLoading] = useState(false);
   const [targetUrl, setTargetUrl] = useState("");
   const [competitorUrls, setCompetitorUrls] = useState(["", "", "", ""]);
@@ -140,59 +142,6 @@ export function CompetitorAnalysis() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
-
-  if (!user) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-6 w-6" />
-            Competitor Analysis
-          </CardTitle>
-          <CardDescription>
-            Analyze your website against competitors to identify SEO opportunities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
-            <p className="text-muted-foreground mb-4">
-              Please log in to access the competitor analysis tool
-            </p>
-            <Button onClick={() => window.location.href = '/login'}>
-              Login to Continue
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!user.isPremium && results) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-6 w-6" />
-            Analysis Results
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Target className="h-12 w-12 text-indigo-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
-            <p className="text-muted-foreground mb-4">
-              Competitor analysis is a premium feature. Upgrade to unlock full access.
-            </p>
-            <Button onClick={() => window.location.href = '/upgrade'}>
-              Upgrade to Premium
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">

@@ -224,49 +224,6 @@ export default function WritingAssistantPage() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <PenTool className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Please log in to access the SEO Writing Assistant
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button className="w-full">Login to Continue</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <PenTool className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              SEO Writing Assistant is a premium feature. Upgrade to access this
-              tool.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/upgrade">
-              <Button className="w-full">Upgrade to Premium</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const getSuggestionIcon = (type: string) => {
     switch (type) {
       case "improvement":

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 
 export default function KeywordResearchPage() {
+  
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("us");
   const [language, setLanguage] = useState("en");
@@ -86,55 +88,6 @@ export default function KeywordResearchPage() {
       setIsLoading(false);
     }
   };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Search className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Authentication Required</CardTitle>
-            <CardDescription>
-              Please log in to access keyword research tool
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => (window.location.href = "/login")}
-              className="w-full"
-            >
-              Login to Continue
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium && results) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <TrendingUp className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Keyword research is a premium feature. Upgrade to unlock full
-              access.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={() => (window.location.href = "/upgrade")}
-              className="w-full"
-            >
-              Upgrade to Premium
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

@@ -237,10 +237,10 @@ const Testimonials = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => (window.location.href = "/sign-up")}
+                onClick={() => (window.location.href = "#features")}
                 className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
               >
-                Start Free
+                Explore Tools
               </button>
               <button
                 onClick={() => (window.location.href = "#pricing")}

@@ -195,49 +195,6 @@ export default function PositionTrackingPage() {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <BarChart3 className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Please log in to access the Position Tracking tool
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button className="w-full">Login to Continue</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <BarChart3 className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Position Tracking is a premium feature. Upgrade to access this
-              tool.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/upgrade">
-              <Button className="w-full">Upgrade to Premium</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const getChangeIcon = (change: number) => {
     if (change > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
     if (change < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;

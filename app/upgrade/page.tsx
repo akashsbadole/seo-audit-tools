@@ -140,9 +140,9 @@ export default function UpgradePage() {
               <Button 
                 className="w-full bg-indigo-600 hover:bg-indigo-700" 
                 onClick={handleUpgrade}
-                disabled={isLoading || user?.isPremium}
+                disabled={isLoading || false}
               >
-                {isLoading ? 'Processing...' : user?.isPremium ? 'Current Plan' : 'Upgrade Now'}
+                {isLoading ? 'Processing...' : false ? 'Current Plan' : 'Upgrade Now'}
               </Button>
             </CardContent>
           </Card>

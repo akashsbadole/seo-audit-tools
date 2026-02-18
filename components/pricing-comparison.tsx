@@ -106,8 +106,8 @@ const PricingComparison = () => {
       // Open contact modal or redirect to contact page
       window.location.href = "/contact";
     } else {
-      // Redirect to signup page with plan selection
-      window.location.href = `/sign-up?plan=${planId}&billing=${billingCycle}`;
+      // Redirect to features section
+      window.location.href = `/#features`;
     }
   };
 

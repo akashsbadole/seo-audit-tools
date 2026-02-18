@@ -149,62 +149,6 @@ export function ContentAnalyzer() {
     URL.revokeObjectURL(url);
   };
 
-  if (!user) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-6 w-6" />
-            AI Content Analyzer
-          </CardTitle>
-          <CardDescription>
-            Analyze your content with AI-powered insights and recommendations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Target className="h-12 w-12 text-indigo-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
-            <p className="text-muted-foreground mb-4">
-              Please log in to access AI-powered content analysis
-            </p>
-            <Button onClick={() => window.location.href = '/login'}>
-              Login to Continue
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!user.isPremium && results.length > 0) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-6 w-6" />
-            AI Analysis Results
-          </CardTitle>
-          <CardDescription>
-            You've reached your free limit. Upgrade to premium for unlimited AI analyses.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <Zap className="h-12 w-12 text-indigo-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
-            <p className="text-muted-foreground mb-4">
-              AI-powered content analysis is a premium feature. Upgrade to unlock unlimited analyses.
-            </p>
-            <Button onClick={() => window.location.href = '/upgrade'}>
-              Upgrade to Premium
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       <Card>

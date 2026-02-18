@@ -197,7 +197,7 @@ export function SeoauditPricing() {
                 )}
               </div>
 
-              <Link href="/signup" className="block mb-8">
+              <a href="#features" className="block mb-8">
                 <Button
                   size="lg"
                   className={`w-full ${
@@ -206,10 +206,10 @@ export function SeoauditPricing() {
                       : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
                   }`}
                 >
-                  {plan.monthlyPrice === 0 ? "Get Started Free" : "Start Free Trial"}
+                  {plan.monthlyPrice === 0 ? "Get Started Free" : "Explore Features"}
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
-              </Link>
+              </a>
 
               <div className="space-y-3">
                 {plan.features.map((feature, featureIndex) => (

@@ -142,17 +142,7 @@ export function PremiumFeatures() {
 
       <div className="text-center mt-4">
         <p className="text-sm text-white mt-4">
-          All tools require login. {user ? (
-            user.isPremium ? "You have premium access!" : (
-              <Link href="/upgrade" className="text-yellow-300 hover:underline">
-                Upgrade to premium for unlimited access and advanced features.
-              </Link>
-            )
-          ) : (
-            <Link href="/login" className="text-yellow-300 hover:underline">
-              Login for unlimited access and advanced features.
-            </Link>
-          )}
+          All tools are free to use. Enjoy unlimited access to all features!
         </p>
       </div>
     </div>

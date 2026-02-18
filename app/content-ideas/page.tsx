@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import Link from "next/link";
 import {
   Card,
@@ -70,6 +71,7 @@ interface ContentIdea {
 }
 
 export default function ContentIdeasPage() {
+  
   const { toast } = useToast();
   const [topic, setTopic] = useState("");
   const [keywords, setKeywords] = useState("");
@@ -210,49 +212,6 @@ export default function ContentIdeasPage() {
       setIsLoading(false);
     }
   };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Brain className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Please log in to access the Content Ideas Generator
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button className="w-full">Login to Continue</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Brain className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Content Ideas Generator is a premium feature. Upgrade to access
-              this tool.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/upgrade">
-              <Button className="w-full">Upgrade to Premium</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const getContentTypeIcon = (type: string) => {
     switch (type) {

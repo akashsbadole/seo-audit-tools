@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+
 import {
   Card,
   CardContent,
@@ -76,6 +77,7 @@ interface BulkAnalysisResult {
 }
 
 export default function BulkAnalysisPage() {
+  
   const { toast } = useToast();
   const [urls, setUrls] = useState("");
   const [analysisType, setAnalysisType] = useState("seo");
@@ -216,48 +218,6 @@ export default function BulkAnalysisPage() {
       setIsLoading(false);
     }
   };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Zap className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Please log in to access the Bulk Analysis tool
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button className="w-full">Login to Continue</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!user.isPremium) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <Zap className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-            <CardTitle>Premium Feature</CardTitle>
-            <CardDescription>
-              Bulk Analysis is a premium feature. Upgrade to access this tool.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/upgrade">
-              <Button className="w-full">Upgrade to Premium</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {

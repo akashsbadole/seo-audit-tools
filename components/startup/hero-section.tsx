@@ -106,9 +106,9 @@ export function StartupHeroSection() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                <Link href="/signup">
+                <Link href="#features">
                   <GradientButton size="lg" className="bg-white text-indigo-600 hover:bg-gray-100">
-                    Get Started Free
+                    Explore Tools
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </GradientButton>
                 </Link>
