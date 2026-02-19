@@ -218,7 +218,7 @@ export function SeoauditFeatures() {
           </div>
         ))}
 
-        <div className="text-center mt-16">
+        {/* <div className="text-center mt-16">
           <div className="inline-flex p-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-2xl">
             <Button
               size="lg"
@@ -229,7 +229,7 @@ export function SeoauditFeatures() {
             </Button>
           </div>
           <p className="mt-4 text-gray-500">No credit card required • 7-day free trial</p>
-        </div>
+        </div> */}
       </div>
     </section>
   );

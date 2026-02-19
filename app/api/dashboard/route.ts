@@ -90,8 +90,11 @@ export async function GET(request: NextRequest) {
     // Get active and resolved issues count
     const activeIssues = await prisma.auditIssue.count({
       where: {
-        audit: {
-          userId: dbUser.id
+        auditId: {
+          in: (await prisma.siteAudit.findMany({
+            where: { userId: dbUser.id },
+            select: { id: true }
+          })).map(a => a.id)
         },
         isFixed: false
       }
@@ -99,8 +102,11 @@ export async function GET(request: NextRequest) {
 
     const resolvedIssues = await prisma.auditIssue.count({
       where: {
-        audit: {
-          userId: dbUser.id
+        auditId: {
+          in: (await prisma.siteAudit.findMany({
+            where: { userId: dbUser.id },
+            select: { id: true }
+          })).map(a => a.id)
         },
         isFixed: true
       }

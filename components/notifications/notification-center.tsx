@@ -297,7 +297,6 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
     <div className="fixed inset-0 z-50 flex items-start justify-end pt-16 pr-4">
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
       <GlassCard
-        ref={notificationRef}
         className="w-full max-w-md max-h-[80vh] overflow-hidden relative z-10"
       >
         <CardHeader className="border-b">

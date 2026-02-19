@@ -117,7 +117,7 @@ export function SeoauditPricing() {
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-fuchsia-600/10 to-transparent rounded-full blur-[100px]" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      {/* <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-gray-400 mb-6">
             <Building className="w-4 h-4 text-violet-400" />
@@ -248,7 +248,7 @@ export function SeoauditPricing() {
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </div> */}
     </section>
   );
 }

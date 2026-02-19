@@ -15,7 +15,7 @@ export default function Home() {
       <SeoauditTestimonials />
       <SeoauditPricing />
       
-      <section className="py-24 bg-[#0a0a0f] border-t border-white/10">
+      {/* <section className="py-24 bg-[#0a0a0f] border-t border-white/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-6">
@@ -29,10 +29,10 @@ export default function Home() {
             <AuditForm />
           </div>
         </div>
-      </section>
+      </section> */}
 
-      <AboutSection />
-      <ContactForm />
+      {/* <AboutSection />
+      <ContactForm /> */}
       <ScrollToTop />
     </main>
   );

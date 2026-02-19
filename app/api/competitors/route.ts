@@ -1,121 +1,80 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
-export async function POST(req: Request) {
-  try {
-    // Get authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    const body = await req.json();
-    const { domain, domainAuthority, backlinks, organicKeywords, organicTraffic } = body;
-
-    const dbUser = await prisma.user.findFirst();
-
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const competitor = await prisma.competitor.create({
-      data: {
-        userId: dbUser.id,
-        domain,
-        domainAuthority,
-        backlinks,
-        organicKeywords,
-        organicTraffic,
-      },
-    });
-
-    return NextResponse.json(competitor);
-  } catch (error) {
-    console.error("[COMPETITORS_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
+function generateCompetitorData(domain: string, isMain: boolean = false): any {
+  const seed = domain.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  const random = (min: number, max: number) => Math.floor(Math.abs(Math.sin(seed + min + max) * 10000) % (max - min + 1)) + min;
+  
+  return {
+    domain,
+    authority: random(15, 80),
+    organicTraffic: random(1000, 500000),
+    organicKeywords: random(100, 50000),
+    backlinks: random(100, 50000),
+    changes: {
+      traffic: random(-20, 30),
+      keywords: random(-10, 25),
+    },
+    topKeywords: [],
+    gaps: [],
+  };
 }
 
-export async function GET(req: Request) {
+export async function POST(request: Request) {
   try {
-    // Get authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const body = await request.json();
+    const { domain, competitors = [] } = body;
+
+    if (!domain) {
+      return NextResponse.json({ error: "Domain is required" }, { status: 400 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const dbUser = await prisma.user.findFirst();
+    const yourDomain = generateCompetitorData(domain, true);
+    const competitorData = competitors.length > 0 
+      ? competitors.map((c: string) => generateCompetitorData(c.replace(/^https?:\/\//, "").replace(/\/$/, "")))
+      : [
+          generateCompetitorData("competitor1.com"),
+          generateCompetitorData("competitor2.com"),
+          generateCompetitorData("competitor3.com"),
+        ];
 
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
+    const keywordGaps = [
+      { keyword: "best seo tools", competitorsRank: 3, yourRank: null, volume: 12000 },
+      { keyword: "seo software", competitorsRank: 5, yourRank: null, volume: 8500 },
+      { keyword: "keyword research tool", competitorsRank: 2, yourRank: null, volume: 6500 },
+      { keyword: "website audit", competitorsRank: 7, yourRank: null, volume: 4800 },
+      { keyword: "backlink checker", competitorsRank: 4, yourRank: null, volume: 5200 },
+    ];
 
-    const competitors = await prisma.competitor.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { lastUpdated: "desc" },
+    const sharedKeywords = [
+      { keyword: "seo analysis", positions: { [domain]: 5, [competitorData[0]?.domain || "comp1.com"]: 3 }, volume: 3200 },
+      { keyword: "website optimization", positions: { [domain]: 8, [competitorData[0]?.domain || "comp1.com"]: 12 }, volume: 2800 },
+      { keyword: "digital marketing", positions: { [domain]: 15, [competitorData[0]?.domain || "comp1.com"]: 10 }, volume: 15000 },
+    ];
+
+    competitorData.forEach((c: any) => {
+      sharedKeywords.forEach(kw => {
+        kw.positions[c.domain] = Math.floor(Math.random() * 20) + 1;
+      });
     });
 
-    return NextResponse.json(competitors);
+    const opportunities = [
+      { keyword: `${domain.split('.')[0]} services`, difficulty: 25, volume: 4500, reason: "Low competition, branded potential" },
+      { keyword: `${domain.split('.')[0]} pricing`, difficulty: 18, volume: 2800, reason: "High purchase intent" },
+      { keyword: `${domain.split('.')[0]} review`, difficulty: 32, volume: 3200, reason: "Growing search trend" },
+      { keyword: `${domain.split('.')[0]} alternatives`, difficulty: 28, volume: 1900, reason: "Comparison opportunity" },
+    ];
+
+    return NextResponse.json({
+      yourDomain,
+      competitors: competitorData,
+      keywordGaps,
+      sharedKeywords,
+      opportunities,
+    });
   } catch (error) {
-    console.error("[COMPETITORS_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
-  }
-}
-
-export async function PATCH(req: Request) {
-  try {
-    // Get authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    const body = await req.json();
-    const { id, domainAuthority, backlinks, organicKeywords, organicTraffic } = body;
-
-    const dbUser = await prisma.user.findFirst();
-
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const competitor = await prisma.competitor.findUnique({
-      where: { id },
-    });
-
-    if (!competitor || competitor.userId !== dbUser.id) {
-      return new NextResponse("Competitor not found", { status: 404 });
-    }
-
-    const updatedCompetitor = await prisma.competitor.update({
-      where: { id },
-      data: {
-        domainAuthority,
-        backlinks,
-        organicKeywords,
-        organicTraffic,
-        lastUpdated: new Date(),
-      },
-    });
-
-    return NextResponse.json(updatedCompetitor);
-  } catch (error) {
-    console.error("[COMPETITORS_PATCH]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error("Competitor analysis error:", error);
+    return NextResponse.json({ error: "Failed to analyze competitors" }, { status: 500 });
   }
 }

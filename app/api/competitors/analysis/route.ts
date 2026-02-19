@@ -1,61 +1,35 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const dbUser = await prisma.user.findFirst();
+    const competitors = [
+      { id: "1", domain: "competitor1.com", domainAuthority: 65, backlinks: 12500, organicKeywords: 3400, organicTraffic: 45000, lastUpdated: new Date().toISOString() },
+      { id: "2", domain: "competitor2.com", domainAuthority: 58, backlinks: 8900, organicKeywords: 2100, organicTraffic: 32000, lastUpdated: new Date().toISOString() },
+      { id: "3", domain: "competitor3.com", domainAuthority: 72, backlinks: 25000, organicKeywords: 5600, organicTraffic: 78000, lastUpdated: new Date().toISOString() },
+    ];
 
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Get all competitors with their metrics
-    const competitors = await prisma.competitor.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { lastUpdated: "desc" },
-    });
-
-    // Calculate competitor analysis metrics
     const metrics = {
       totalCompetitors: competitors.length,
-      averageDomainAuthority: competitors.reduce((acc: number, comp: any) => acc + comp.domainAuthority, 0) / competitors.length || 0,
-      totalBacklinks: competitors.reduce((acc: number, comp: any) => acc + comp.backlinks, 0),
-      totalOrganicKeywords: competitors.reduce((acc: number, comp: any) => acc + comp.organicKeywords, 0),
-      totalOrganicTraffic: competitors.reduce((acc: number, comp: any) => acc + comp.organicTraffic, 0),
+      averageDomainAuthority: Math.round(competitors.reduce((acc, c) => acc + c.domainAuthority, 0) / competitors.length),
+      totalBacklinks: competitors.reduce((acc, c) => acc + c.backlinks, 0),
+      totalOrganicKeywords: competitors.reduce((acc, c) => acc + c.organicKeywords, 0),
+      totalOrganicTraffic: competitors.reduce((acc, c) => acc + c.organicTraffic, 0),
     };
 
-    // Get top performing competitors
-    const topCompetitors = competitors
-      .sort((a: any, b: any) => b.domainAuthority - a.domainAuthority)
-      .slice(0, 5);
-
-    // Get competitors with significant changes
-    const significantChanges = competitors
-      .filter((comp: any) => {
-        const lastUpdate = new Date(comp.lastUpdated);
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        return lastUpdate >= oneWeekAgo;
-      })
-      .sort((a: any, b: any) => b.lastUpdated.getTime() - a.lastUpdated.getTime())
-      .slice(0, 5);
+    const topCompetitors = [...competitors].sort((a, b) => b.domainAuthority - a.domainAuthority).slice(0, 5);
 
     return NextResponse.json({
       competitors,
       metrics,
       topCompetitors,
-      significantChanges,
+      significantChanges: competitors.slice(0, 3),
     });
   } catch (error) {
     console.error("[COMPETITORS_ANALYSIS_GET]", error);

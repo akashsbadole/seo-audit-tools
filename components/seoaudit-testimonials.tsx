@@ -61,11 +61,11 @@ export function SeoauditTestimonials() {
   };
 
   return (
-    <section className="py-24 bg-[#0a0a0f] relative overflow-hidden">
-      <div className="absolute inset-0">
+    <section className="py-4 bg-[#0a0a0f] relative overflow-hidden">
+      {/* <div className="absolute inset-0">
         <div className="absolute top-1/2 left-0 w-[300px] h-[300px] bg-gradient-to-r from-fuchsia-600/10 to-transparent rounded-full blur-[80px]" />
         <div className="absolute top-1/2 right-0 w-[300px] h-[300px] bg-gradient-to-l from-violet-600/10 to-transparent rounded-full blur-[80px]" />
-      </div>
+      </div> */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
@@ -146,7 +146,7 @@ export function SeoauditTestimonials() {
           </div>
         </div>
 
-        <div className="text-center">
+        {/* <div className="text-center">
           <Button
             size="lg"
             className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-8"
@@ -155,7 +155,7 @@ export function SeoauditTestimonials() {
             <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
           <p className="mt-4 text-gray-500">No credit card required • 14-day free trial</p>
-        </div>
+        </div> */}
       </div>
     </section>
   );

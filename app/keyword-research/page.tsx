@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,190 +12,140 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Search,
   TrendingUp,
   BarChart3,
-  Globe,
   Loader2,
   AlertCircle,
   Target,
   Star,
+  DollarSign,
+  Hash,
 } from "lucide-react";
 
+interface KeywordData {
+  keyword: string;
+  searchVolume: number;
+  difficulty: number;
+  cpc: number;
+  competition: number;
+  trend: number[];
+}
+
+interface KeywordResult {
+  keyword: string;
+  searchVolume: number;
+  difficulty: number;
+  cpc: number;
+  competition: "low" | "medium" | "high";
+  trend: number[];
+  relatedKeywords: KeywordData[];
+  questions: string[];
+  serpFeatures: string[];
+  opportunities: Array<{ keyword: string; reason: string; opportunity: number }>;
+}
+
 export default function KeywordResearchPage() {
-  
   const [keyword, setKeyword] = useState("");
-  const [location, setLocation] = useState("us");
-  const [language, setLanguage] = useState("en");
-  const [includeRelated, setIncludeRelated] = useState(true);
-  const [includeSuggestions, setIncludeSuggestions] = useState(true);
+  const [country, setCountry] = useState("us");
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<KeywordResult | null>(null);
+  const [error, setError] = useState("");
 
   const researchKeyword = async () => {
     if (!keyword.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a keyword to research",
-        variant: "destructive",
-      });
+      setError("Please enter a keyword to research");
       return;
     }
 
     setIsLoading(true);
+    setError("");
+
     try {
-      const token = localStorage.getItem("auth_token");
       const response = await fetch("/api/keyword-research", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          keyword,
-          location,
-          language,
-          includeRelated,
-          includeSuggestions,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, country }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setResults(data);
-        toast({
-          title: "Research Complete",
-          description: "Keyword research completed successfully",
-        });
       } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to research keyword",
-          variant: "destructive",
-        });
+        setError(data.error || "Failed to research keyword");
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during research",
-        variant: "destructive",
-      });
+    } catch (err) {
+      setError("An error occurred during research");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getDifficultyColor = (difficulty: number) => {
+    if (difficulty <= 30) return "text-green-600 bg-green-100";
+    if (difficulty <= 60) return "text-yellow-600 bg-yellow-100";
+    return "text-red-600 bg-red-100";
+  };
+
+  const getCompetitionBadge = (competition: string) => {
+    const colors = {
+      low: "bg-green-100 text-green-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      high: "bg-red-100 text-red-800",
+    };
+    return colors[competition as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="seoaudit-container">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Keyword Research
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Keyword Research</h1>
           <p className="text-gray-600">
-            Discover profitable keywords with advanced research tools, search
-            volume, competition analysis, and SERP features.
+            Discover profitable keywords with advanced research tools, search volume, competition analysis, and SERP features.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Input Form */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Research Keyword
-              </CardTitle>
-              <CardDescription>Enter keyword to analyze</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Keyword *
-                </label>
-                <Input
-                  placeholder="Enter keyword..."
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  <select
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[hsl(var(--seoaudit-orange))] focus:border-transparent"
-                  >
-                    <option value="us">United States</option>
-                    <option value="uk">United Kingdom</option>
-                    <option value="ca">Canada</option>
-                    <option value="au">Australia</option>
-                    <option value="de">Germany</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Language
-                  </label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[hsl(var(--seoaudit-orange))] focus:border-transparent"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="related"
-                    checked={includeRelated}
-                    onChange={(e) => setIncludeRelated(e.target.checked)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="related"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Include related keywords
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="suggestions"
-                    checked={includeSuggestions}
-                    onChange={(e) => setIncludeSuggestions(e.target.checked)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="suggestions"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Include content suggestions
-                  </label>
-                </div>
-              </div>
-
-              <Button
-                onClick={researchKeyword}
-                disabled={isLoading || !keyword.trim()}
-                className="w-full"
-              >
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Research Keyword
+            </CardTitle>
+            <CardDescription>Enter a keyword to discover opportunities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Input
+                placeholder="Enter keyword..."
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && researchKeyword()}
+                className="flex-1"
+              />
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="us">United States</SelectItem>
+                  <SelectItem value="uk">United Kingdom</SelectItem>
+                  <SelectItem value="ca">Canada</SelectItem>
+                  <SelectItem value="au">Australia</SelectItem>
+                  <SelectItem value="de">Germany</SelectItem>
+                  <SelectItem value="fr">France</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={researchKeyword} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -205,214 +154,183 @@ export default function KeywordResearchPage() {
                 ) : (
                   <>
                     <TrendingUp className="mr-2 h-4 w-4" />
-                    Research Keyword
+                    Research
                   </>
                 )}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {error}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Results */}
-          {results && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Research Results
-                  </span>
-                  <Badge variant="secondary">
-                    Score: {results.score.overall}
+        {results && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Search Volume</span>
+                    <BarChart3 className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {results.searchVolume.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Monthly searches</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Difficulty</span>
+                    <Target className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <Badge className={`text-xl ${getDifficultyColor(results.difficulty)}`}>
+                    {results.difficulty}/100
                   </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Comprehensive analysis for "{results.keyword}"
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value="related">Related</TabsTrigger>
-                    <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-                    <TabsTrigger value="opportunities">
-                      Opportunities
-                    </TabsTrigger>
-                  </TabsList>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {results.difficulty <= 30 ? "Easy to rank" : results.difficulty <= 60 ? "Moderate" : "Hard to rank"}
+                  </p>
+                </CardContent>
+              </Card>
 
-                  <TabsContent value="overview" className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {results.searchVolume?.toLocaleString()}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">CPC</span>
+                    <DollarSign className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-green-600">
+                    ${results.cpc.toFixed(2)}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Cost per click</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Competition</span>
+                    <Hash className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <Badge className={getCompetitionBadge(results.competition)}>
+                    {results.competition.toUpperCase()}
+                  </Badge>
+                  <p className="text-xs text-gray-500 mt-1">Paid competition</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Tabs defaultValue="related" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="related">Related Keywords</TabsTrigger>
+                <TabsTrigger value="questions">Questions</TabsTrigger>
+                <TabsTrigger value="serp">SERP Features</TabsTrigger>
+                <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="related" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Related Keywords</CardTitle>
+                    <CardDescription>Keywords related to your search term</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {results.relatedKeywords.map((kw, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{kw.keyword}</div>
+                          </div>
+                          <div className="flex items-center gap-6 text-sm">
+                            <div className="text-center">
+                              <div className="text-gray-500">Volume</div>
+                              <div className="font-medium">{kw.searchVolume.toLocaleString()}</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-gray-500">KD</div>
+                              <Badge className={getDifficultyColor(kw.difficulty)}>{kw.difficulty}</Badge>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-gray-500">CPC</div>
+                              <div className="font-medium">${kw.cpc.toFixed(2)}</div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          Search Volume
-                        </div>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="text-2xl font-bold text-orange-600">
-                          {results.difficulty}
-                        </div>
-                        <div className="text-sm text-gray-600">Difficulty</div>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="text-2xl font-bold text-green-600">
-                          ${results.cpc?.toFixed(2)}
-                        </div>
-                        <div className="text-sm text-gray-600">CPC</div>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {results.competition}
-                        </div>
-                        <div className="text-sm text-gray-600">Competition</div>
-                      </div>
+                      ))}
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                    {/* SERP Features */}
-                    {results.serpFeatures &&
-                      results.serpFeatures.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                            SERP Features
-                          </h3>
-                          <div className="flex flex-wrap gap-2">
-                            {results.serpFeatures.map(
-                              (feature: any, index: number) => (
-                                <Badge
-                                  key={index}
-                                  variant={
-                                    feature.present ? "default" : "secondary"
-                                  }
-                                >
-                                  {feature.type
-                                    .replace(/_/g, " ")
-                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
-                                </Badge>
-                              )
-                            )}
+              <TabsContent value="questions" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Question Keywords</CardTitle>
+                    <CardDescription>Questions people ask about this topic</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {results.questions.map((q, i) => (
+                        <div key={i} className="p-3 bg-gray-50 rounded-lg text-sm">
+                          {q}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="serp" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">SERP Features</CardTitle>
+                    <CardDescription>Features appearing in search results</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {results.serpFeatures.map((feature, i) => (
+                        <Badge key={i} variant="outline" className="text-sm py-1 px-3">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="opportunities" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Keyword Opportunities</CardTitle>
+                    <CardDescription>High-potential keywords to target</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {results.opportunities.map((opp, i) => (
+                        <div key={i} className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                          <Star className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{opp.keyword}</div>
+                            <div className="text-sm text-gray-600">{opp.reason}</div>
                           </div>
+                          <Badge className="bg-green-100 text-green-800">
+                            {opp.opportunity}% opportunity
+                          </Badge>
                         </div>
-                      )}
-                  </TabsContent>
-
-                  <TabsContent value="related" className="space-y-4">
-                    {results.relatedKeywords &&
-                      results.relatedKeywords.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                            Related Keywords
-                          </h3>
-                          <div className="space-y-2">
-                            {results.relatedKeywords
-                              .slice(0, 10)
-                              .map((kw: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                >
-                                  <div>
-                                    <div className="font-medium text-gray-900">
-                                      {kw.keyword}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Relevance: {kw.relevance}%
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-sm text-gray-600">
-                                      Vol: {kw.volume}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Diff: {kw.difficulty}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                          </div>
-                        </div>
-                      )}
-                  </TabsContent>
-
-                  <TabsContent value="suggestions" className="space-y-4">
-                    {results.suggestions && results.suggestions.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                          Content Suggestions
-                        </h3>
-                        <div className="space-y-2">
-                          {results.suggestions.map(
-                            (suggestion: any, index: number) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                              >
-                                <div>
-                                  <div className="font-medium text-gray-900">
-                                    {suggestion.keyword}
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    Type: {suggestion.type}
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm text-gray-600">
-                                    Vol: {suggestion.volume}
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="opportunities" className="space-y-4">
-                    {results.opportunities &&
-                      results.opportunities.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                            Opportunities
-                          </h3>
-                          <div className="space-y-3">
-                            {results.opportunities.map(
-                              (opp: any, index: number) => (
-                                <div
-                                  key={index}
-                                  className="flex items-start gap-3 p-4 bg-green-50 rounded-lg"
-                                >
-                                  <Target className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1">
-                                    <div className="font-medium text-gray-900">
-                                      {opp.keyword}
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      {opp.reason}
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <Badge
-                                      variant="default"
-                                      className="bg-green-100 text-green-800"
-                                    >
-                                      <Star className="h-3 w-3 mr-1" />
-                                      {opp.opportunity}%
-                                    </Badge>
-                                  </div>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
 import {
   Globe,
   BarChart3,
@@ -21,183 +20,117 @@ import {
   Shield,
   Loader2,
   AlertCircle,
+  Users,
+  Link2,
+  ExternalLink,
 } from "lucide-react";
 
+interface DomainData {
+  domain: string;
+  authority: {
+    domainAuthority: number;
+    pageAuthority: number;
+    spamScore: number;
+  };
+  traffic: {
+    organicKeywords: number;
+    organicTraffic: number;
+    paidKeywords: number;
+    paidTraffic: number;
+  };
+  backlinks: {
+    totalBacklinks: number;
+    referringDomains: number;
+    newBacklinks: number;
+    lostBacklinks: number;
+  };
+  technical: {
+    ssl: boolean;
+    mobile: boolean;
+    speed: number;
+    indexPages: number;
+  };
+  topKeywords: Array<{ keyword: string; position: number; volume: number; url: string }>;
+  topPages: Array<{ url: string; traffic: number; keywords: number }>;
+  competitors: Array<{ domain: string; authority: number; keywords: number }>;
+}
+
 export default function DomainOverviewPage() {
-  
   const [domain, setDomain] = useState("");
-  const [includeCompetitors, setIncludeCompetitors] = useState(false);
-  const [competitorDomains, setCompetitorDomains] = useState(["", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<any>(null);
-
-  const handleAddCompetitor = () => {
-    if (competitorDomains.length < 5) {
-      setCompetitorDomains([...competitorDomains, ""]);
-    }
-  };
-
-  const handleRemoveCompetitor = (index: number) => {
-    const newDomains = competitorDomains.filter((_, i) => i !== index);
-    setCompetitorDomains(newDomains);
-  };
-
-  const handleCompetitorChange = (index: number, value: string) => {
-    const newDomains = [...competitorDomains];
-    newDomains[index] = value;
-    setCompetitorDomains(newDomains);
-  };
+  const [results, setResults] = useState<DomainData | null>(null);
+  const [error, setError] = useState("");
 
   const analyzeDomain = async () => {
     if (!domain.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a domain to analyze",
-        variant: "destructive",
-      });
+      setError("Please enter a domain to analyze");
       return;
     }
 
     setIsLoading(true);
+    setError("");
+    
     try {
-      const token = localStorage.getItem("auth_token");
       const response = await fetch("/api/domain-overview", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          domain,
-          includeCompetitors,
-          competitorDomains: competitorDomains.filter((d) => d.trim() !== ""),
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: domain.replace(/^https?:\/\//, "").replace(/\/$/, "") }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setResults(data);
-        toast({
-          title: "Analysis Complete",
-          description: "Domain overview analysis completed successfully",
-        });
       } else {
-        toast({
-          title: "Error",
-          description: data.error || "Failed to analyze domain",
-          variant: "destructive",
-        });
+        setError(data.error || "Failed to analyze domain");
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during analysis",
-        variant: "destructive",
-      });
+    } catch (err) {
+      setError("An error occurred during analysis");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return "text-green-600";
+    if (score >= 40) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getScoreBg = (score: number) => {
+    if (score >= 70) return "bg-green-100";
+    if (score >= 40) return "bg-yellow-100";
+    return "bg-red-100";
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="seoaudit-container">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Domain Overview
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Domain Overview</h1>
           <p className="text-gray-600">
-            Get comprehensive insights about any domain including authority,
-            traffic, backlinks, and technical SEO metrics.
+            Get comprehensive insights about any domain including authority, traffic, backlinks, and technical SEO metrics.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Input Form */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Domain Analysis
-              </CardTitle>
-              <CardDescription>Enter domain to analyze</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Domain *
-                </label>
-                <Input
-                  placeholder="example.com"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center space-x-2 mb-3">
-                  <input
-                    type="checkbox"
-                    id="competitors"
-                    checked={includeCompetitors}
-                    onChange={(e) => setIncludeCompetitors(e.target.checked)}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="competitors"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Include competitor analysis
-                  </label>
-                </div>
-
-                {includeCompetitors && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Competitor Domains
-                    </label>
-                    {competitorDomains.map((compDomain, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Input
-                          placeholder="competitor.com"
-                          value={compDomain}
-                          onChange={(e) =>
-                            handleCompetitorChange(index, e.target.value)
-                          }
-                          className="flex-1"
-                        />
-                        {competitorDomains.length > 1 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveCompetitor(index)}
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    {competitorDomains.length < 5 && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddCompetitor}
-                        className="w-full"
-                      >
-                        Add Competitor
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <Button
-                onClick={analyzeDomain}
-                disabled={isLoading || !domain.trim()}
-                className="w-full"
-              >
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Analyze Domain
+            </CardTitle>
+            <CardDescription>Enter a domain to get comprehensive analysis</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4">
+              <Input
+                placeholder="example.com"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && analyzeDomain()}
+                className="flex-1"
+              />
+              <Button onClick={analyzeDomain} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -206,173 +139,193 @@ export default function DomainOverviewPage() {
                 ) : (
                   <>
                     <BarChart3 className="mr-2 h-4 w-4" />
-                    Analyze Domain
+                    Analyze
                   </>
                 )}
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                {error}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Results */}
-          {results && (
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Analysis Results
-                  </span>
-                  <Badge variant="secondary">
-                    Score: {results.score.overall}/100
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Comprehensive analysis for {results.domain.name}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Domain Info */}
+        {results && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Domain Authority</span>
+                    <Globe className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className={`text-3xl font-bold ${getScoreColor(results.authority.domainAuthority)}`}>
+                    {results.authority.domainAuthority}
+                  </div>
+                  <Progress value={results.authority.domainAuthority} className="h-2 mt-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Organic Traffic</span>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-green-600">
+                    {results.traffic.organicTraffic.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {results.traffic.organicKeywords.toLocaleString()} keywords
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Backlinks</span>
+                    <Link2 className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-purple-600">
+                    {results.backlinks.totalBacklinks.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {results.backlinks.referringDomains.toLocaleString()} referring domains
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">Spam Score</span>
+                    <Shield className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <div className={`text-3xl font-bold ${results.authority.spamScore <= 3 ? "text-green-600" : results.authority.spamScore <= 7 ? "text-yellow-600" : "text-red-600"}`}>
+                    {results.authority.spamScore}%
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {results.authority.spamScore <= 3 ? "Low risk" : results.authority.spamScore <= 7 ? "Medium risk" : "High risk"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Top Organic Keywords</CardTitle>
+                  <CardDescription>Keywords driving traffic to this domain</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {results.topKeywords.map((kw, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{kw.keyword}</div>
+                          <div className="text-xs text-gray-500 truncate">{kw.url}</div>
+                        </div>
+                        <div className="text-right ml-4">
+                          <Badge variant="outline">#{kw.position}</Badge>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {kw.volume.toLocaleString()} vol
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Top Pages</CardTitle>
+                  <CardDescription>Pages with most organic traffic</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {results.topPages.map((page, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1 flex items-center gap-2">
+                          <ExternalLink className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                          <span className="text-sm truncate">{page.url}</span>
+                        </div>
+                        <div className="text-right ml-4">
+                          <div className="font-medium">{page.traffic.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500">{page.keywords} keywords</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Technical SEO</CardTitle>
+                  <CardDescription>Technical health of the domain</CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Globe className="h-5 w-5" />
-                      Domain Information
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Domain Age:</span>
-                        <span className="font-medium">
-                          {results.domain.age} years
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Registrar:</span>
-                        <span className="font-medium">
-                          {results.domain.registrar}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Nameservers:</span>
-                        <span className="font-medium">
-                          {results.domain.nameservers.length}
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">SSL Certificate</span>
+                      <Badge className={results.technical.ssl ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                        {results.technical.ssl ? "Valid" : "Missing"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Mobile Friendly</span>
+                      <Badge className={results.technical.mobile ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                        {results.technical.mobile ? "Yes" : "No"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Page Speed Score</span>
+                      <span className={`font-medium ${getScoreColor(results.technical.speed)}`}>
+                        {results.technical.speed}/100
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Indexed Pages</span>
+                      <span className="font-medium">{results.technical.indexPages.toLocaleString()}</span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {/* Authority */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5" />
-                      Authority Metrics
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Domain Authority:</span>
-                        <span className="font-medium">
-                          {results.authority.domainAuthority}
-                        </span>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Top Competitors
+                  </CardTitle>
+                  <CardDescription>Similar domains in search results</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {results.competitors.map((comp, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="font-medium">{comp.domain}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-gray-500">
+                            {comp.keywords.toLocaleString()} keywords
+                          </span>
+                          <Badge variant="outline">DA: {comp.authority}</Badge>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Page Authority:</span>
-                        <span className="font-medium">
-                          {results.authority.pageAuthority}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Spam Score:</span>
-                        <span className="font-medium">
-                          {results.authority.spamScore}
-                        </span>
-                      </div>
-                    </div>
+                    ))}
                   </div>
-
-                  {/* Traffic */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5" />
-                      Traffic Estimates
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Organic Keywords:</span>
-                        <span className="font-medium">
-                          {results.traffic.organicKeywords?.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Organic Traffic:</span>
-                        <span className="font-medium">
-                          {results.traffic.organicTraffic?.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Paid Keywords:</span>
-                        <span className="font-medium">
-                          {results.traffic.paidKeywords?.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Backlinks */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Shield className="h-5 w-5" />
-                      Backlink Profile
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Backlinks:</span>
-                        <span className="font-medium">
-                          {results.backlinks.totalBacklinks?.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          Referring Domains:
-                        </span>
-                        <span className="font-medium">
-                          {results.backlinks.referringDomains?.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">New Backlinks:</span>
-                        <span className="font-medium">
-                          {results.backlinks.newBacklinks?.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommendations */}
-                {results.recommendations &&
-                  results.recommendations.length > 0 && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                        Recommendations
-                      </h3>
-                      <div className="space-y-2">
-                        {results.recommendations.map(
-                          (rec: string, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg"
-                            >
-                              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                              <p className="text-sm text-gray-700">{rec}</p>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

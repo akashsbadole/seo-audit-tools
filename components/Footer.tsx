@@ -70,7 +70,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#050508] border-t border-white/10">
-      <div className="border-b border-white/10">
+      {/* <div className="border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-white mb-4">
@@ -90,7 +90,7 @@ const Footer = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
@@ -109,11 +109,11 @@ const Footer = () => {
             <div className="space-y-3 mb-6">
               <div className="flex items-center text-gray-400">
                 <Mail className="h-4 w-4 mr-3 text-violet-400" />
-                <span>support@seoauditpro.com</span>
+                <span>support@seoauditcheck.com</span>
               </div>
               <div className="flex items-center text-gray-400">
                 <Phone className="h-4 w-4 mr-3 text-violet-400" />
-                <span>1-800-SEO-PRO</span>
+                <span>Sharing Soon</span>
               </div>
             </div>
 

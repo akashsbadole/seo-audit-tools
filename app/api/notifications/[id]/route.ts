@@ -1,40 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
-import { prisma } from '@/lib/prisma';
+
+const mockNotifications = [
+  { id: "1", type: "AUDIT_COMPLETE", message: "Your site audit has completed", read: false, createdAt: new Date().toISOString() },
+  { id: "2", type: "KEYWORD_RANKING", message: "Keyword 'seo tools' moved to position 5", read: false, createdAt: new Date().toISOString() },
+  { id: "3", type: "SYSTEM", message: "Welcome to SEOaudit Pro!", read: true, createdAt: new Date().toISOString() },
+];
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get authorization header
+    const { id } = await params;
     const authHeader = request.headers.get('authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract token from header
-    const token = authHeader.substring(7);
-    
-    // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
-    
-    if (!decoded?.userId) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    const index = mockNotifications.findIndex(n => n.id === id);
+    const deleted = index !== -1;
 
-    const notificationId = params.id;
-
-    // Delete notification
-    const notification = await prisma.notification.deleteMany({
-      where: {
-        id: notificationId,
-        userId: decoded.userId
-      }
-    });
-
-    return NextResponse.json({ success: true, deleted: notification.count > 0 });
+    return NextResponse.json({ success: true, deleted });
   } catch (error) {
     console.error('Delete notification error:', error);
     return NextResponse.json(

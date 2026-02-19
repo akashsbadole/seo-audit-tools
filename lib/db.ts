@@ -27,6 +27,7 @@ export async function addDomain(data: DomainInput) {
         pdfData: data.pdfData,
         pdfPath: data.pdfPath,
         userId: data.userId,
+        updatedAt: new Date(),
       },
     });
     return domain;
@@ -90,7 +91,7 @@ export async function searchAndStoreDomain(domainName: string, userId?: string):
       data: {
         domainName,
         userId,
-        // IP address will be added later if available
+        updatedAt: new Date(),
       },
     });
 
@@ -117,6 +118,7 @@ export async function updateDomainReport(domainName: string, reportData: Partial
         pdfData: reportData.reportData,
         pdfPath: reportData.reportPath,
         userId: reportData.userId,
+        updatedAt: new Date(),
       },
     });
     return updatedDomain;

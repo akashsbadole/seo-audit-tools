@@ -88,9 +88,9 @@ export function TechnicalSEO() {
       case "critical":
         return <Badge variant="destructive">Critical</Badge>;
       case "warning":
-        return <Badge variant="warning">Warning</Badge>;
+        return <Badge variant="secondary">Warning</Badge>;
       case "info":
-        return <Badge variant="secondary">Info</Badge>;
+        return <Badge variant="outline">Info</Badge>;
       default:
         return null;
     }
@@ -103,7 +103,7 @@ export function TechnicalSEO() {
       case "in-progress":
         return <Badge variant="secondary">In Progress</Badge>;
       case "resolved":
-        return <Badge variant="success">Resolved</Badge>;
+        return <Badge variant="default">Resolved</Badge>;
       default:
         return null;
     }

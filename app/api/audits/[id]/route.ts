@@ -19,9 +19,10 @@ function verifyToken(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const tokenPayload = verifyToken(request)
     if (!tokenPayload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -37,18 +38,18 @@ export async function GET(
 
     const audit = await prisma.siteAudit.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: dbUser.id
       },
       include: {
-        auditResults: true,
-        auditIssues: {
+        AuditResult: true,
+        AuditIssue: {
           orderBy: [
             { severity: 'desc' },
             { createdAt: 'desc' }
           ]
         },
-        auditReports: true
+        AuditReport: true
       }
     })
 
@@ -62,15 +63,15 @@ export async function GET(
       updatedAt: audit.updatedAt.toISOString(),
       startedAt: audit.startedAt?.toISOString(),
       completedAt: audit.completedAt?.toISOString(),
-      auditIssues: audit.auditIssues.map(issue => ({
+      AuditIssue: audit.AuditIssue.map((issue: { id: string; severity: string; category: string; title: string; description: string; suggestion: string | null; pageUrl: string | null; element: string | null; isFixed: boolean; createdAt: Date }) => ({
         ...issue,
         createdAt: issue.createdAt.toISOString()
       })),
-      auditResults: audit.auditResults.map(result => ({
+      AuditResult: audit.AuditResult.map((result: { id: string; category: string; subcategory: string; score: number; maxScore: number; data: unknown; createdAt: Date }) => ({
         ...result,
         createdAt: result.createdAt.toISOString()
       })),
-      auditReports: audit.auditReports.map(report => ({
+      AuditReport: audit.AuditReport.map((report: { id: string; title: string; description: string | null; reportType: string; format: string; filePath: string | null; isPublic: boolean; createdAt: Date }) => ({
         ...report,
         createdAt: report.createdAt.toISOString()
       }))
@@ -87,9 +88,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const tokenPayload = verifyToken(request)
     if (!tokenPayload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -103,10 +105,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Check if audit exists and belongs to user
     const audit = await prisma.siteAudit.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: dbUser.id
       }
     })
@@ -115,9 +116,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
     }
 
-    // Delete the audit (cascade will handle related records)
     await prisma.siteAudit.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Audit deleted successfully' })
@@ -133,9 +133,10 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const tokenPayload = verifyToken(request)
     if (!tokenPayload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -150,12 +151,11 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status, notes } = body
+    const { status } = body
 
-    // Check if audit exists and belongs to user
     const audit = await prisma.siteAudit.findFirst({
       where: {
-        id: params.id,
+        id,
         userId: dbUser.id
       }
     })
@@ -164,12 +164,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
     }
 
-    // Update the audit
     const updatedAudit = await prisma.siteAudit.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(status && { status }),
-        // Add notes field to schema if needed
         updatedAt: new Date()
       }
     })

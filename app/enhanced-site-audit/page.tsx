@@ -168,7 +168,6 @@ export default function EnhancedSiteAuditPage() {
               title: "Text Too Small",
               description:
                 "Some text elements are too small to read on mobile devices",
-              description: "Some buttons are too close together on mobile",
             },
           ],
         },
@@ -255,7 +254,7 @@ export default function EnhancedSiteAuditPage() {
                     <Checkbox
                       id="include-competitors"
                       checked={includeCompetitors}
-                      onCheckedChange={setIncludeCompetitors}
+                      onCheckedChange={(checked) => setIncludeCompetitors(checked === true)}
                     />
                     <Label htmlFor="include-competitors">
                       Include competitor analysis

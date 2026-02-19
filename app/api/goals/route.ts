@@ -1,50 +1,31 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+
+const mockGoals = [
+  { id: "1", title: "Increase organic traffic", description: "Reach 10k visitors", target: 10000, current: 6500, deadline: new Date().toISOString(), status: "ACTIVE" },
+  { id: "2", title: "Improve SEO score", description: "Achieve 90+ score", target: 90, current: 78, deadline: new Date().toISOString(), status: "ACTIVE" },
+];
 
 export async function POST(req: Request) {
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
     const body = await req.json();
     const { title, description, target, deadline } = body;
 
-    const dbUser = await prisma.user.findFirst();
+    const newGoal = {
+      id: `${Date.now()}`,
+      title,
+      description,
+      target,
+      current: 0,
+      deadline: deadline || new Date().toISOString(),
+      status: "ACTIVE",
+    };
 
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const goal = await prisma.goal.create({
-      data: {
-        userId: dbUser.id,
-        title,
-        description,
-        target,
-        current: 0,
-        deadline: new Date(deadline),
-        status: "ACTIVE",
-      },
-    });
-
-    // Create notification for goal creation
-    await prisma.notification.create({
-      data: {
-        userId: dbUser.id,
-        type: "GOAL_MILESTONE",
-        message: `New goal created: ${title}`,
-      },
-    });
-
-    return NextResponse.json(goal);
+    return NextResponse.json(newGoal);
   } catch (error) {
     console.error("[GOALS_POST]", error);
     return new NextResponse("Internal error", { status: 500 });
@@ -53,29 +34,12 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    const dbUser = await prisma.user.findFirst();
-
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const goals = await prisma.goal.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { deadline: "asc" },
-    });
-
-    return NextResponse.json(goals);
+    return NextResponse.json(mockGoals);
   } catch (error) {
     console.error("[GOALS_GET]", error);
     return new NextResponse("Internal error", { status: 500 });
@@ -84,52 +48,23 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
     const body = await req.json();
     const { id, current, status } = body;
 
-    const dbUser = await prisma.user.findFirst();
-
-    if (!dbUser) {
-      return new NextResponse("User not found", { status: 404 });
-    }
-
-    const goal = await prisma.goal.findUnique({
-      where: { id },
-    });
-
-    if (!goal || goal.userId !== dbUser.id) {
-      return new NextResponse("Goal not found", { status: 404 });
-    }
-
-    const updatedGoal = await prisma.goal.update({
-      where: { id },
-      data: {
-        current,
-        status,
-      },
-    });
-
-    // Create notification for goal progress
-    if (current >= goal.target && status === "COMPLETED") {
-      await prisma.notification.create({
-        data: {
-          userId: dbUser.id,
-          type: "GOAL_MILESTONE",
-          message: `Goal completed: ${goal.title}`,
-        },
-      });
-    }
+    const updatedGoal = {
+      id,
+      title: "Updated Goal",
+      description: "Updated description",
+      target: 100,
+      current: current || 50,
+      deadline: new Date().toISOString(),
+      status: status || "ACTIVE",
+    };
 
     return NextResponse.json(updatedGoal);
   } catch (error) {

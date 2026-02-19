@@ -33,7 +33,7 @@ const DropdownMenu = () => {
               Features
             </Link>
 
-            <Link
+            {/* <Link
               href="/tools"
               className="text-gray-300 hover:text-white font-medium text-sm transition-colors"
             >
@@ -52,7 +52,7 @@ const DropdownMenu = () => {
               className="text-gray-300 hover:text-white font-medium text-sm transition-colors"
             >
               About
-            </Link>
+            </Link> */}
           </nav>
 
           <div className="flex items-center space-x-4">

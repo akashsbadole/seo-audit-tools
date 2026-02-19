@@ -16,12 +16,10 @@ export async function GET(request: Request) {
   const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
   
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = decoded;
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
 
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.userId },
-      include: { usage: true }
+      where: { id: decoded.userId }
     });
 
     if (!dbUser) {
@@ -31,9 +29,13 @@ export async function GET(request: Request) {
       );
     }
 
+    const usage = await prisma.userUsage.findUnique({
+      where: { userId: dbUser.id }
+    });
+
     return NextResponse.json({
-      freeReportsUsed: dbUser.usage?.freeReportsUsed || 0,
-      freeSearchesUsed: dbUser.usage?.freeSearchesUsed || 0,
+      freeReportsUsed: usage?.freeReportsUsed || 0,
+      freeSearchesUsed: usage?.freeSearchesUsed || 0,
       isPremium: dbUser.isPremium
     });
   } catch (error) {

@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    // Get authorization header
+    const { userId } = await params;
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -15,18 +15,12 @@ export async function GET(
       );
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    // For now, just return the first user since we don't have proper auth
-    const user = await prisma.user.findFirst({
-      include: { usage: true },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
     });
 
     if (!user) {
-      return NextResponse.json(null);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json(user);

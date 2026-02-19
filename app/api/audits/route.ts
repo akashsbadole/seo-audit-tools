@@ -34,10 +34,10 @@ export async function POST(req: Request) {
     // Check if user has available reports
     const dbUser = await prisma.user.findFirst({
       include: {
-        siteAudits: {
+        SiteAudit: {
           where: {
             createdAt: {
-              gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+              gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
             },
           },
         },
@@ -48,18 +48,19 @@ export async function POST(req: Request) {
       return new NextResponse("User not found", { status: 404 });
     }
 
-    // Check usage limits (10 audits per day for free users)
-    if (!dbUser.isPremium && dbUser.siteAudits.length >= 10) {
+    if (!dbUser.isPremium && dbUser.SiteAudit.length >= 10) {
       return new NextResponse("Daily audit limit reached", { status: 403 });
     }
 
-    // Create new audit
+    const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const audit = await prisma.siteAudit.create({
       data: {
+        id: auditId,
         userId: dbUser.id,
         url: validatedData.url,
         status: "PENDING",
         startedAt: new Date(),
+        updatedAt: new Date(),
       },
     });
 
@@ -125,13 +126,13 @@ export async function GET(req: Request) {
         skip: (page - 1) * limit,
         take: limit,
         include: {
-          auditResults: {
+          AuditResult: {
             select: {
               category: true,
               score: true,
             },
           },
-          auditIssues: {
+          AuditIssue: {
             select: {
               severity: true,
             },
@@ -167,7 +168,10 @@ async function simulateAuditProcess(auditId: string, url: string) {
   // Update status to in progress
   await prisma.siteAudit.update({
     where: { id: auditId },
-    data: { status: "IN_PROGRESS" },
+    data: {
+      status: "IN_PROGRESS",
+      updatedAt: new Date(),
+    },
   });
 
   // Simulate audit delay
@@ -183,7 +187,6 @@ async function simulateAuditProcess(auditId: string, url: string) {
     (seoScore + accessibilityScore + performanceScore + qualityScore) / 4
   );
 
-  // Update audit with results
   await prisma.siteAudit.update({
     where: { id: auditId },
     data: {
@@ -200,38 +203,47 @@ async function simulateAuditProcess(auditId: string, url: string) {
       warningIssues: Math.floor(Math.random() * 10) + 2,
       infoIssues: Math.floor(Math.random() * 8) + 1,
       completedAt: new Date(),
+      updatedAt: new Date(),
     },
   });
 
-  // Create sample audit results
+  const timestamp = Date.now();
   const auditResults = [
     {
+      id: `result_${timestamp}_1`,
       auditId,
       category: "SEO",
       subcategory: "Meta Tags",
       score: seoScore,
-      data: { metaTags: "analyzed" },
+      maxScore: 100,
+      data: { metaTags: "analyzed" } as any,
     },
     {
+      id: `result_${timestamp}_2`,
       auditId,
       category: "Accessibility",
       subcategory: "WCAG Compliance",
       score: accessibilityScore,
-      data: { wcagLevel: "AA" },
+      maxScore: 100,
+      data: { wcagLevel: "AA" } as any,
     },
     {
+      id: `result_${timestamp}_3`,
       auditId,
       category: "Performance",
       subcategory: "Core Web Vitals",
       score: performanceScore,
-      data: { lcp: "2.1s", fid: "45ms", cls: "0.08" },
+      maxScore: 100,
+      data: { lcp: "2.1s", fid: "45ms", cls: "0.08" } as any,
     },
     {
+      id: `result_${timestamp}_4`,
       auditId,
       category: "Quality",
       subcategory: "Content Quality",
       score: qualityScore,
-      data: { contentAnalysis: "completed" },
+      maxScore: 100,
+      data: { contentAnalysis: "completed" } as any,
     },
   ];
 
@@ -239,9 +251,9 @@ async function simulateAuditProcess(auditId: string, url: string) {
     data: auditResults,
   });
 
-  // Create sample issues
   const sampleIssues = [
     {
+      id: `issue_${timestamp}_1`,
       auditId,
       severity: "CRITICAL" as const,
       category: "SEO",
@@ -251,6 +263,7 @@ async function simulateAuditProcess(auditId: string, url: string) {
       suggestion: "Add unique meta descriptions to all pages",
     },
     {
+      id: `issue_${timestamp}_2`,
       auditId,
       severity: "WARNING" as const,
       category: "Accessibility",

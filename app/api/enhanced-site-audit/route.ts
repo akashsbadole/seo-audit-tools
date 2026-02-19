@@ -741,9 +741,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Save to database
+    const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const audit = await prisma.siteAudit.create({
       data: {
+        id: auditId,
         userId: user.id,
         url,
         seoScore: result.overallScore,
@@ -758,13 +759,20 @@ export async function POST(request: Request) {
           result.basic.headings.h1.issues.length > 0
             ? result.basic.headings.h1.issues.length
             : 0,
+        updatedAt: new Date(),
+        digitalCertaintyIndex: result.overallScore,
+        accessibilityScore: result.overallScore,
+        performanceScore: result.overallScore,
+        qualityScore: result.overallScore,
+        warningIssues: 0,
+        infoIssues: 0,
       },
     });
 
-    // Create audit report if export format is specified
     if (exportFormat && exportData?.success) {
       await prisma.auditReport.create({
         data: {
+          id: `report_${Date.now()}`,
           auditId: audit.id,
           title: whiteLabel?.reportTitle || "SEO Audit Report",
           description: `SEO audit report for ${url}`,

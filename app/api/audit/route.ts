@@ -729,9 +729,10 @@ export async function GET(request: NextRequest) {
             userId
           });
 
-          // Store audit results in SiteAudit table
+          const auditId = `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const audit = await prisma.siteAudit.create({
             data: {
+              id: auditId,
               userId,
               url,
               status: "COMPLETED",
@@ -748,42 +749,46 @@ export async function GET(request: NextRequest) {
               infoIssues: 0,
               startedAt: new Date(),
               completedAt: new Date(),
+              updatedAt: new Date(),
             },
           });
 
-          // Store detailed audit results
           const auditResults = [
             {
+              id: `result_${Date.now()}_1`,
               auditId: audit.id,
               category: "SEO",
               subcategory: "On-Page",
               score: auditResult.onPageSEO.score,
               maxScore: 100,
-              data: auditResult.onPageSEO,
+              data: auditResult.onPageSEO as any,
             },
             {
+              id: `result_${Date.now()}_2`,
               auditId: audit.id,
               category: "Technical",
               subcategory: "Technical SEO",
               score: auditResult.technicalSEO.score,
               maxScore: 100,
-              data: auditResult.technicalSEO,
+              data: auditResult.technicalSEO as any,
             },
             {
+              id: `result_${Date.now()}_3`,
               auditId: audit.id,
               category: "Content",
               subcategory: "Content SEO",
               score: auditResult.contentSEO.score,
               maxScore: 100,
-              data: auditResult.contentSEO,
+              data: auditResult.contentSEO as any,
             },
             {
+              id: `result_${Date.now()}_4`,
               auditId: audit.id,
               category: "Performance",
               subcategory: "Performance",
               score: auditResult.performance.score,
               maxScore: 100,
-              data: auditResult.performance,
+              data: auditResult.performance as any,
             },
           ];
 
@@ -791,12 +796,11 @@ export async function GET(request: NextRequest) {
             data: auditResults,
           });
 
-          // Store audit issues
           const auditIssues = [];
           
-          // Collect issues from all audit categories
           if (auditResult.onPageSEO.metaTitle.issues.length > 0) {
             auditIssues.push({
+              id: `issue_${Date.now()}_1`,
               auditId: audit.id,
               severity: "CRITICAL" as const,
               category: "SEO",
@@ -808,6 +812,7 @@ export async function GET(request: NextRequest) {
 
           if (auditResult.technicalSEO.robotsTxt.issues.length > 0) {
             auditIssues.push({
+              id: `issue_${Date.now()}_2`,
               auditId: audit.id,
               severity: "WARNING" as const,
               category: "Technical",

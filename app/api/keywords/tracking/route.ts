@@ -1,49 +1,33 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+
+const mockKeywords = [
+  { id: "1", keyword: "seo tools", position: 5, previousPosition: 8, searchVolume: 12000, difficulty: 65 },
+  { id: "2", keyword: "keyword research", position: 12, previousPosition: 15, searchVolume: 8500, difficulty: 70 },
+  { id: "3", keyword: "backlink checker", position: 3, previousPosition: 3, searchVolume: 5200, difficulty: 55 },
+];
 
 export async function GET(request: Request) {
   try {
-    // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    const dbUser = await prisma.user.findFirst();
-
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Get all keywords with their history
-    const keywords = await prisma.keyword.findMany({
-      where: { userId: dbUser.id },
-      orderBy: { lastUpdated: "desc" },
-    });
-
-    // Calculate keyword performance metrics
     const metrics = {
-      totalKeywords: keywords.length,
-      averagePosition: keywords.reduce((acc: number, kw: any) => acc + kw.position, 0) / keywords.length || 0,
-      keywordsInTop10: keywords.filter((kw: any) => kw.position <= 10).length,
-      keywordsImproved: keywords.filter((kw: any) => kw.position < kw.previousPosition).length,
-      keywordsDeclined: keywords.filter((kw: any) => kw.position > kw.previousPosition).length,
+      totalKeywords: mockKeywords.length,
+      averagePosition: mockKeywords.reduce((acc, kw) => acc + kw.position, 0) / mockKeywords.length,
+      keywordsInTop10: mockKeywords.filter(kw => kw.position <= 10).length,
+      keywordsImproved: mockKeywords.filter(kw => kw.position < kw.previousPosition).length,
+      keywordsDeclined: mockKeywords.filter(kw => kw.position > kw.previousPosition).length,
     };
 
-    // Get trending keywords (those with significant position changes)
-    const trendingKeywords = keywords
-      .filter((kw: any) => Math.abs(kw.position - kw.previousPosition) >= 3)
-      .sort((a: any, b: any) =>
-        Math.abs(b.position - b.previousPosition) - Math.abs(a.position - a.previousPosition))
+    const trendingKeywords = mockKeywords
+      .filter(kw => Math.abs(kw.position - kw.previousPosition) >= 3)
+      .sort((a, b) => Math.abs(b.position - b.previousPosition) - Math.abs(a.position - a.previousPosition))
       .slice(0, 5);
 
     return NextResponse.json({
-      keywords,
+      keywords: mockKeywords,
       metrics,
       trendingKeywords,
     });

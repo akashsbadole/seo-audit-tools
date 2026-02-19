@@ -3,16 +3,10 @@ import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response("Unauthorized", { status: 401 });
     }
-
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
 
     const { email } = await request.json();
 
@@ -23,21 +17,13 @@ export async function POST(request: Request) {
       );
     }
 
+    const userId = `user_${Date.now()}`;
     const user = await prisma.user.create({
       data: {
         id: userId,
         email,
-        usage: {
-          create: {
-            monthlyAudits: 0,
-            monthlyKeywords: 0,
-            monthlyCompetitors: 0,
-            lastReset: new Date(),
-          },
-        },
-      },
-      include: {
-        usage: true,
+        name: email.split('@')[0],
+        updatedAt: new Date(),
       },
     });
 
@@ -53,22 +39,12 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    // TODO: Validate token and get user ID
-    // For now, we'll use a placeholder user ID
-    const userId = "temp-user-id";
-
-    const user = await prisma.user.findFirst({
-      include: {
-        usage: true,
-      },
-    });
+    const user = await prisma.user.findFirst();
 
     if (!user) {
       return NextResponse.json(
